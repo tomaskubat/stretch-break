@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="cs">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StretchBreak · Náhledy fáze 0</title>
+<style>
+    :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { max-width: 1320px; margin: 0 auto; padding: 40px 24px; background: light-dark(#f5f5f7, #151515); }
+    h1 { font-size: 28px; margin: 0 0 12px; } p { color: light-dark(#595961, #aaa); line-height: 1.5; }
+    nav { display: flex; flex-wrap: wrap; gap: 10px 20px; margin: 28px 0 44px; }
+    a { color: light-dark(#075abe, #74b2ff); }
+    section { margin: 0 0 50px; scroll-margin-top: 24px; }
+    h2 { font-size: 19px; font-weight: 600; margin-bottom: 16px; }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    figure { margin: 0; } figcaption { font-size: 13px; color: light-dark(#595961, #aaa); margin-bottom: 10px; }
+    img { display: block; max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 2px 20px #0001; }
+    .panel img { width: 380px; } .controls img { width: 480px; }
+    @media (max-width: 650px) { .pair { grid-template-columns: 1fr; } body { padding: 24px 16px; } }
+</style>
+<h1>StretchBreak</h1>
+<p>Náhledy nativního UI prototypu, fáze 0. Obrázky ukazují skutečné SwiftUI obrazovky ve světlém a tmavém režimu. Kliknutím otevřete původní PNG.</p>
+<nav>
+    <a href="#countdown">Odpočet</a><a href="#break">Přestávka</a><a href="#settings">Nastavení</a><a href="#history">Historie</a>
+    <a href="#paused">Pauza</a><a href="#ready">Připraveno</a><a href="#completed">Dokončeno</a>
+    <a href="#partial">Částečně přeskočeno</a><a href="#skipped">Přeskočeno</a><a href="#controls">Ovládání prototypu</a>
+</nav>
+<section id="countdown"><h2>Odpočet</h2><div class="pair panel">
+<figure><figcaption>Light</figcaption><a href="countdown-light.png"><img src="countdown-light.png" alt="Odpočet ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="countdown-dark.png"><img src="countdown-dark.png" alt="Odpočet v tmavém režimu"></a></figure>
+</div></section>
+<section id="break"><h2>Rozpracovaná přestávka</h2><div class="pair panel">
+<figure><figcaption>Light</figcaption><a href="break-light.png"><img src="break-light.png" alt="Cviky ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="break-dark.png"><img src="break-dark.png" alt="Cviky v tmavém režimu"></a></figure>
+</div></section>
+<section id="settings"><h2>Nastavení</h2><div class="pair">
+<figure><figcaption>Light</figcaption><a href="settings-light.png"><img src="settings-light.png" alt="Nastavení ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="settings-dark.png"><img src="settings-dark.png" alt="Nastavení v tmavém režimu"></a></figure>
+</div></section>
+<section id="history"><h2>Historie a detail částečné přestávky</h2><div class="pair">
+<figure><figcaption>Light</figcaption><a href="history-light.png"><img src="history-light.png" alt="Historie ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="history-dark.png"><img src="history-dark.png" alt="Historie v tmavém režimu"></a></figure>
+</div></section>
+<section id="paused"><h2>Pozastaveno</h2><div class="pair panel">
+<figure><figcaption>Light</figcaption><a href="paused-light.png"><img src="paused-light.png" alt="Pozastavený odpočet ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="paused-dark.png"><img src="paused-dark.png" alt="Pozastavený odpočet v tmavém režimu"></a></figure>
+</div></section>
+<section id="ready"><h2>Přestávka připravena</h2><div class="pair panel">
+<figure><figcaption>Light</figcaption><a href="ready-light.png"><img src="ready-light.png" alt="Připravená přestávka ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="ready-dark.png"><img src="ready-dark.png" alt="Připravená přestávka v tmavém režimu"></a></figure>
+</div></section>
+<section id="completed"><h2>Dokončeno a nový interval</h2><div class="pair panel">
+<figure><figcaption>Light</figcaption><a href="completed-light.png"><img src="completed-light.png" alt="Dokončená přestávka ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="completed-dark.png"><img src="completed-dark.png" alt="Dokončená přestávka v tmavém režimu"></a></figure>
+</div></section>
+<section id="partial"><h2>Částečně přeskočeno</h2><div class="pair panel">
+<figure><figcaption>Light</figcaption><a href="partial-light.png"><img src="partial-light.png" alt="Částečné přeskočení ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="partial-dark.png"><img src="partial-dark.png" alt="Částečné přeskočení v tmavém režimu"></a></figure>
+</div></section>
+<section id="skipped"><h2>Přeskočeno</h2><div class="pair panel">
+<figure><figcaption>Light</figcaption><a href="skipped-light.png"><img src="skipped-light.png" alt="Přeskočená přestávka ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="skipped-dark.png"><img src="skipped-dark.png" alt="Přeskočená přestávka v tmavém režimu"></a></figure>
+</div></section>
+<section id="controls"><h2>Oddělené ovládání ukázek</h2><div class="pair controls">
+<figure><figcaption>Light</figcaption><a href="controls-light.png"><img src="controls-light.png" alt="Ovládání prototypu ve světlém režimu"></a></figure>
+<figure><figcaption>Dark</figcaption><a href="controls-dark.png"><img src="controls-dark.png" alt="Ovládání prototypu v tmavém režimu"></a></figure>
+</div></section>
+</html>

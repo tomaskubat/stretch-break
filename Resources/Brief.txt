@@ -1,0 +1,226 @@
+# Zadání: StretchBreak pro macOS
+
+## Cíl aplikace
+
+Vytvořit nativní aplikaci pro macOS, která v nastavitelném intervalu připomíná krátkou pohybovou přestávku. Uživatel dostane sadu cviků s plánovaným počtem opakování. Každý cvik může rychle potvrdit, případně upravit skutečně provedený počet opakování a potvrdit jej.
+
+Pokud se přestávka právě nehodí, uživatel ji přeskočí jedním tlačítkem. Aplikace zaznamená výsledek a začne odpočítávat nový interval.
+
+Pracovní název je **StretchBreak**. Rozhraní bude v angličtině.
+
+## Způsob vývoje
+
+Vývoj probíhá autonomně. Vývojový agent samostatně volí technické řešení, vytváří projekt, píše a spouští testy, sestavuje aplikaci a opravuje nalezené chyby. Běžná technická rozhodnutí nevyžadují zásah uživatele.
+
+Práce je rozdělena do dvou oddělených etap:
+
+1. **Fáze 0: pouze UI prototyp.** Výsledkem je spustitelný prototyp pro posouzení vzhledu a ovládání.
+2. **Navazující fáze: funkční implementace.** Začíná samostatným zadáním po vyhodnocení prototypu.
+
+V rámci fáze 0 se nesmí předčasně implementovat skutečné plánování připomenutí, ukládání dat ani systémové notifikace.
+
+## Fáze 0: UI prototyp
+
+### Účel
+
+Ujasnit podobu aplikace, rozmístění prvků a hlavní uživatelské kroky před implementací funkčnosti.
+
+Prototyp vytvořit jako nativní macOS aplikaci ve Swiftu a SwiftUI. Použít ukázková data a lokální stav rozhraní. Musí jít sestavit, spustit a proklikat.
+
+### Obrazovky a stavy
+
+**Menu bar a odpočítávání**
+
+Aplikace má ikonu v horní systémové liště. Po kliknutí zobrazí kompaktní panel obsahující:
+
+- čas do další přestávky,
+- nastavený interval,
+- tlačítko `Start break`,
+- ovládání `Pause` / `Resume`,
+- přístup do nastavení a historie.
+
+**Aktuální přestávka**
+
+Zobrazit přehledný seznam tří ukázkových cviků. Každý řádek obsahuje:
+
+- název cviku,
+- počet opakování,
+- možnost rychlé změny počtu,
+- tlačítko `Done`,
+- zřetelný stav po potvrzení.
+
+Výchozí počet lze potvrdit jedním kliknutím. Změnu počtu umožnit přímým zápisem i ovládáním plus/minus. Potvrzený řádek musí jasně ukazovat zaznamenaný počet.
+
+Panel dále obsahuje průběh, například `2 of 3 completed`, a tlačítko `Skip & restart`. Po dokončení všech cviků zobrazí krátké potvrzení a nové odpočítávání.
+
+**Nastavení**
+
+- Interval připomenutí, výchozí hodnota 60 minut.
+- Úprava seznamu cviků, jejich názvů a počtů opakování.
+- Přidání, odstranění a změna pořadí cviků.
+- Zapnutí nebo vypnutí systémových notifikací.
+
+**Historie**
+
+Ukázkový seznam dokončených, přeskočených a částečně dokončených přestávek. Detail přestávky ukáže plánované a skutečně zaznamenané počty opakování.
+
+### Vizuální požadavky
+
+- Klidné, kompaktní rozhraní odpovídající macOS.
+- Podpora světlého a tmavého režimu.
+- Standardní systémová typografie a ovládací prvky.
+- Dobrá čitelnost a pohodlné ovládání myší i klávesnicí.
+- Stav cviku nesmí být vyjádřen pouze barvou.
+- Minimum kroků mezi připomenutím a zaznamenáním výsledku.
+- Žádné účty, onboardingové průvodce ani zbytečné potvrzovací dialogy.
+
+Prototyp musí umožnit přepínání ukázkových stavů bez čekání na skutečný interval. Ovládání těchto ukázek oddělit od navrženého produkčního rozhraní.
+
+### Výstup fáze 0
+
+Odevzdat:
+
+- zdrojový projekt,
+- sestavenou spustitelnou aplikaci,
+- náhledy hlavních obrazovek ve světlém i tmavém režimu,
+- stručný popis ovládání a otevřených návrhových rozhodnutí.
+
+Ověřit sestavení, spouštění, proklikání hlavních stavů a základní ovládání klávesnicí. Prototypové testy mají ověřovat hlavní interakce, nikoliv budoucí funkčnost časovače.
+
+Po odevzdání prototypu tuto fázi ukončit.
+
+## Funkční požadavky pro navazující implementaci
+
+### Časovač a připomenutí
+
+- Výchozí interval je 60 minut.
+- Interval lze nastavit na celé minuty v rozsahu 1 až 240.
+- První odpočítávání začne při prvním spuštění aplikace.
+- Po uplynutí intervalu vznikne jedna aktuální přestávka.
+- Aplikace upozorní stavem ikony v menu baru a případně systémovou notifikací.
+- Připomenutí nesmí samo přebírat fokus ani přerušovat psaní v jiné aplikaci.
+- Kliknutí na notifikaci otevře aktuální přestávku.
+- Dokud uživatel přestávku nedokončí nebo nepřeskočí, nevznikají další připomenutí.
+- Nový interval se počítá od dokončení nebo přeskočení přestávky.
+
+Tlačítko `Start break` umožní zahájit přestávku před uplynutím intervalu. Po jejím uzavření začne nový plný interval.
+
+### Potvrzování cviků
+
+Každý cvik má plánovaný počet opakování a skutečně zaznamenaný počet.
+
+- `Done` bez úpravy zaznamená plánovaný počet.
+- Úprava počtu před potvrzením zaznamená upravenou hodnotu.
+- Povolené počty jsou celá čísla od 1 do 999.
+- Prázdné, záporné a nečíselné hodnoty nelze potvrdit.
+- Potvrzení stejného cviku nesmí vytvořit duplicitní záznam.
+- Dokud je přestávka otevřená, lze potvrzení vrátit a počet opravit.
+- Potvrzením posledního cviku se přestávka automaticky dokončí a začne nové odpočítávání.
+
+Zavření panelu aktuální přestávku neukončuje a neztrácí dosavadní potvrzení.
+
+### Přeskočení přestávky
+
+Tlačítko `Skip & restart` bez dalšího dialogu:
+
+1. Uzavře aktuální přestávku.
+2. Zachová již potvrzené cviky.
+3. Zbývající cviky označí jako přeskočené.
+4. Spustí nový plný interval.
+
+Pokud nebyl potvrzen žádný cvik, přestávka má stav `Skipped`. Pokud byla potvrzena část cviků, má stav `Partially completed`. Pokud byly potvrzeny všechny cviky, má stav `Completed`.
+
+Přeskočený cvik nemá zaznamenaný počet opakování.
+
+### Pozastavení a změna nastavení
+
+- `Pause` zastaví odpočítávání a zachová zbývající čas.
+- `Resume` pokračuje od zbývajícího času.
+- Pozastavení je dostupné během odpočítávání.
+- Změna intervalu během odpočítávání nastaví nový plný interval. Při pozastavení zůstane odpočítávání pozastavené.
+- Změna intervalu během aktuální přestávky se použije pro následující odpočítávání.
+- Úpravy seznamu cviků se použijí od příští přestávky. Již zahájená přestávka si zachová původní sadu.
+
+### Uspání a restart
+
+Časovač musí vycházet z uloženého termínu, nikoliv pouze z opakovaného odečítání sekund.
+
+- Uspání Macu se započítává do intervalu.
+- Pokud termín uplyne během uspání nebo vypnuté aplikace, po návratu vznikne nejvýše jedna aktuální přestávka.
+- Zmeškané intervaly se nehromadí.
+- Restart aplikace obnoví nastavení, časovač, pozastavení i rozpracovanou přestávku.
+- Po změně systémového času nesmí vznikat duplicity ani neplatný stav odpočítávání.
+
+### Ukládání a historie
+
+Data ukládat lokálně. Aplikace funguje bez internetového připojení a bez uživatelského účtu.
+
+U každé přestávky uchovávat:
+
+- čas zahájení a uzavření,
+- výsledný stav,
+- názvy cviků a plánované počty platné při zahájení,
+- skutečně potvrzené počty,
+- stav jednotlivých cviků.
+
+Historii zobrazovat od nejnovějších záznamů. Změna nastavení nesmí zpětně měnit historii.
+
+## Technické požadavky
+
+- Swift a SwiftUI; AppKit použít tam, kde je potřeba pro integraci s macOS.
+- Primární ovládání přes menu bar.
+- Nastavení a historii lze otevřít v samostatném okně.
+- Podpora Apple Silicon; kompatibilitu s Intelem uvést podle skutečně sestaveného a ověřeného výstupu.
+- Oddělit rozhraní, pravidla přestávek, práci s časem a ukládání.
+- Čas a doručování připomenutí musí být v testech nahraditelné.
+- Odmítnutí oprávnění k notifikacím nesmí blokovat ostatní funkce.
+- Chyby ukládání nesmějí tiše ztratit již potvrzené výsledky.
+
+## Testy pro autonomní vývoj
+
+Testy musí pokrývat chování aplikace a její kritické scénáře. Samotné úspěšné sestavení není důkazem správnosti.
+
+**Jednotkové testy**
+
+- Vypršení intervalu a vznik právě jedné přestávky.
+- Dokončení, přeskočení a částečné dokončení.
+- Restart odpočítávání od správného okamžiku.
+- Pozastavení a pokračování.
+- Změny intervalu a seznamu cviků.
+- Validace počtů opakování.
+- Ochrana před dvojím potvrzením a duplicitním připomenutím.
+
+**Integrační testy**
+
+- Uložení a obnovení nastavení, historie a rozpracované přestávky.
+- Obnova po restartu před termínem i po termínu.
+- Uspání, probuzení a změna systémového času.
+- Odmítnuté notifikace a chyba ukládání.
+
+**UI testy**
+
+- Otevření panelu a zahájení přestávky.
+- Potvrzení výchozího počtu.
+- Úprava počtu a jeho potvrzení.
+- Dokončení celé sady.
+- Přeskočení celé nebo rozpracované přestávky.
+- Úprava nastavení a zobrazení historie.
+
+Časové scénáře testovat pomocí ovladatelného zdroje času, bez skutečného čekání 60 minut. Vývojový agent testy průběžně spouští a opravuje chyby až do jejich úspěšného dokončení.
+
+## Podmínky dokončení funkční aplikace
+
+Aplikaci lze označit za hotovou, až když:
+
+- splňuje uvedené funkční požadavky,
+- projdou relevantní automatické testy,
+- lze ji sestavit a spustit na cílovém Macu,
+- jsou ověřeny hlavní uživatelské kroky ve skutečně spuštěné aplikaci,
+- je odevzdán zdrojový projekt a spustitelný soubor `.app`,
+- je stručně uvedeno, co bylo testováno a co zůstalo neověřené.
+
+Pokud ověření blokují systémová oprávnění nebo nedostupné prostředí, přesně popsat omezení. Neověřenou funkci neoznačovat za otestovanou.
+
+## Mimo rozsah první verze
+
+Cloudová synchronizace, účty, sociální funkce, gamifikace, zdravotní doporučení, video návody, mobilní aplikace a publikování do Mac App Store.
