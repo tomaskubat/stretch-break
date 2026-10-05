@@ -2,11 +2,16 @@
 
 A native macOS app with an English interface. It runs in the menu bar, reminds you to take movement breaks, records actual repetition counts, and stores your history locally. Supports Apple Silicon and macOS 14 or later.
 
-## Running the app and transferring it to another Mac
+## Download and run the app
 
-1. Transfer `dist/StretchBreak-1.0.0-arm64.zip` to the other Mac and extract it.
-2. Move `StretchBreak.app` to Applications and open it. Xcode and additional libraries are not required.
-3. Click the person icon in the menu bar to open the panel. When a break is ready, the icon changes to an exclamation mark.
+1. Open the [latest release](https://github.com/tomaskubat/stretch-break/releases/latest).
+2. Under Assets, download the ZIP ending in `-arm64.zip`, such as `StretchBreak-1.0.0-arm64.zip`.
+3. Extract the ZIP, move `StretchBreak.app` to Applications, and open it. Xcode and additional libraries are not required.
+4. Click the person icon in the menu bar to open the panel. When a break is ready, the icon changes to an exclamation mark.
+
+The application ZIP also includes `Install.md` with installation instructions and `LICENSE` with the MIT license. The `-source.zip` asset contains the source project for building the app yourself.
+
+To use the app on another Mac, download and extract the same application ZIP there. To transfer your existing settings and history, follow the instructions in [Data](#data).
 
 The app has an ad hoc signature, but it is not signed with a Developer ID certificate or notarized. No signing identity is available in the build environment. If macOS blocks the first launch, after attempting to open this app you can use System Settings → Privacy & Security → Open Anyway. [Apple Support](https://support.apple.com/en-us/102445) explains the procedure. A managed Mac may restrict this option.
 
