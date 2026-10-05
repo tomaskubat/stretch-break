@@ -14,6 +14,7 @@ plutil -lint "$APP_PATH/Contents/Info.plist"
 [[ $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Contents/Info.plist") == "$STRETCHBREAK_VERSION" ]]
 [[ $(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$APP_PATH/Contents/Info.plist") == 14.0 ]]
 [[ $(head -n 1 "$TRANSFER_DIR/StretchBreak/Install.md") == "# StretchBreak $STRETCHBREAK_VERSION pro Apple Silicon" ]]
+cmp LICENSE "$TRANSFER_DIR/StretchBreak/LICENSE"
 if /usr/libexec/PlistBuddy -c 'Print :StretchBreakUITestDataDirectory' "$APP_PATH/Contents/Info.plist" >/dev/null 2>&1; then
     print -u2 'The distribution contains a UI test configuration.'
     exit 1
@@ -29,7 +30,7 @@ if zipinfo -1 "dist/$STRETCHBREAK_APP_ARCHIVE" | awk '/\.sqlite$/ { found=1 } EN
     exit 1
 fi
 ditto -x -k "dist/$STRETCHBREAK_SOURCE_ARCHIVE" "$TRANSFER_DIR"
-for ITEM in Package.swift README.md .gitignore .github Sources Tests Scripts Resources Docs Previews; do
+for ITEM in Package.swift README.md LICENSE .gitignore .github Sources Tests Scripts Resources Docs Previews; do
     diff -qr "$PWD/$ITEM" "$TRANSFER_DIR/StretchBreak-source/$ITEM"
 done
 [[ $(awk '{ print $2 }' dist/SHA256SUMS.txt) == "$STRETCHBREAK_APP_ARCHIVE"$'\n'"$STRETCHBREAK_SOURCE_ARCHIVE" ]]
