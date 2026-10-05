@@ -1,70 +1,67 @@
-# StretchBreak, UI prototyp pro macOS
+# StretchBreak
 
-Fáze 0 podle [zadání](Resources/Brief.txt). Nativní SwiftUI aplikace s anglickým rozhraním, ukázkovou historií a stavem pouze v paměti. Fáze funkční implementace zatím nezačala.
+Nativní aplikace pro macOS s anglickým rozhraním. Běží v menu baru, připomíná přestávky, zaznamenává skutečné počty opakování a uchovává historii lokálně. Podporuje Apple Silicon a macOS 14 nebo novější.
 
-## Spuštění
+## Spuštění a přenos na další Mac
 
-Otevřete `dist/StretchBreak.app`. První okno je **Prototype controls**. Produkční návrh rozhraní najdete pod ikonou stojící postavy v systémové liště. **Open panel preview** zobrazí stejný panel v běžném okně.
+1. Přenes `dist/StretchBreak-1.0.0-arm64.zip` na druhý Mac a rozbal jej.
+2. Přesuň `StretchBreak.app` do Applications a otevři ji. Xcode ani další knihovny nejsou potřeba.
+3. Panel otevřeš ikonou postavy v menu baru. Když je přestávka připravená, ikona se změní na vykřičník.
 
-V ovládání prototypu zvolte ukázkový stav a přepněte **System / Light / Dark**. Změna stavu obnoví ukázkové cviky a historii. **Reset samples** obnoví i přepínač notifikací. Po opětovném spuštění se všechna data vrátí na ukázkové hodnoty.
-
-Odpočet je statický. Přepínač notifikací pouze mění vzhled nastavení. Aplikace neplánuje připomenutí, nežádá oprávnění k notifikacím a neukládá nastavení ani výsledky na disk. Snímky obrazovek zapisuje pouze explicitní vývojový příkaz pro export náhledů.
+Balíček má lokální podpis, ale není podepsán certifikátem Developer ID ani notarizován. V tomto prostředí není dostupná žádná podpisová identita. Pokud macOS první spuštění zablokuje, pro tuto vlastní aplikaci lze po pokusu o otevření použít System Settings → Privacy & Security → Open Anyway. Postup popisuje [Apple Support](https://support.apple.com/en-us/102445). Spravovaný Mac může tento postup omezit.
 
 ## Ovládání
 
-- **Start break** nebo Enter při odpočtu zahájí sadu cviků.
-- **Done** zaznamená zobrazený počet. Lze jej změnit zápisem nebo pomocí plus/minus. Enter v poli cviku počet potvrdí.
-- **Undo** vrátí potvrzení, dokud je sada otevřená.
-- Poslední potvrzení zobrazí výsledek a nový plný statický interval.
-- **Skip & restart** zachová potvrzené cviky a ostatní označí jako přeskočené.
-- Zavření panelu zachová otevřenou sadu v paměti aplikace.
-- Nastavení se uplatní na další sadu. Přesun cviků umožňují tlačítka se šipkami.
-- Historie ukazuje plánované a zaznamenané počty vedle sebe. Výběr záznamu lze měnit šipkami nahoru/dolů.
+Výchozí interval je 60 minut. `Start break` zahájí přestávku ihned. U cviku lze zadat počet, použít plus/minus nebo rovnou stisknout `Done` pro plánovaný počet. Povolené hodnoty jsou celá čísla 1 až 999. `Undo` vrátí potvrzení, dokud je přestávka otevřená. Poslední potvrzení dokončí přestávku a zahájí nový interval.
 
-| Zkratka | Akce |
+Zavření panelu zachová rozpracovanou přestávku. `Skip & restart` zaznamená potvrzené cviky, ostatní označí jako přeskočené a spustí nový interval. Pauza zachová zbývající čas i po restartu.
+
+V Settings lze změnit interval 1 až 240 minut, systémové notifikace a seznam cviků. Změny uloží `Save changes`. Změna intervalu restartuje odpočet, při pauze zachová pauzu. U otevřené přestávky se nový interval a nová sada cviků použijí až po jejím uzavření. Historie zachovává původní názvy, plány a zaznamenané výsledky.
+
+| Klávesy | Akce |
 | --- | --- |
-| ⌘0 | Prototype controls |
-| ⌘1 | Panel preview |
-| ⌘, | Nastavení |
-| ⌘⇧H | Historie |
-| ⌘P | Pause / Resume při odpočtu |
-| ⌘⇧S | Skip & restart v otevřené sadě |
-| ⌘W | Zavřít aktuální okno |
+| ⌘1 | Otevřít panel, když je aplikace aktivní |
+| Enter | Zahájit přestávku nebo potvrdit platné pole opakování |
+| ⌘P | Pause / Resume v panelu |
+| ⌘⇧S | Skip & restart v panelu |
+| ⌘, | Settings |
+| ⌘S | Uložit Settings |
+| ⌘⇧H | History |
+| Escape | Zavřít panel |
+| ⌘W | Zavřít samostatné okno |
 | ⌘Q | Ukončit aplikaci |
 
-Tab přechází mezi poli. Zapojení standardních tlačítek do tabulátorového pořadí se řídí nastavením ovládání klávesnicí v macOS.
+Časovač vychází z uloženého termínu. Čas strávený uspáním Macu nebo vypnutou aplikací se započítává. Po návratu vznikne nejvýše jedna aktuální přestávka. Připomenutí samo neotevírá panel. Notifikace závisejí na oprávnění macOS; jejich odmítnutí neblokuje ostatní funkce. Aplikace se sama nepřidává do položek po přihlášení.
 
-## Náhledy
+## Data
 
-[Galerie všech 20 náhledů](Previews/index.html) obsahuje odpočet, pauzu, připravenou přestávku, rozpracovanou sadu, dokončení, oba způsoby přeskočení, nastavení, historii a ovládání prototypu ve světlém a tmavém režimu. Jde o snímky skutečných SwiftUI obrazovek včetně systémových prvků, bez rámu okna. Vývojový export zachycuje vzhled neaktivního okna, proto jsou některá tlačítka šedá. V aktivním panelu mají primární tlačítka systémovou akcentní barvu.
+Vše se ukládá do `~/Library/Application Support/StretchBreak/StretchBreak.sqlite`. Databáze obsahuje nastavení, uložený termín nebo pauzu, rozpracovanou přestávku včetně vstupů a historii. Aplikace nevyžaduje účet ani internet a data nesynchronizuje.
 
-| Obrazovka | Světlý režim | Tmavý režim |
-| --- | --- | --- |
-| Odpočet | [PNG](Previews/countdown-light.png) | [PNG](Previews/countdown-dark.png) |
-| Přestávka | [PNG](Previews/break-light.png) | [PNG](Previews/break-dark.png) |
-| Nastavení | [PNG](Previews/settings-light.png) | [PNG](Previews/settings-dark.png) |
-| Historie | [PNG](Previews/history-light.png) | [PNG](Previews/history-dark.png) |
+Data jsou oddělená od `.app`. Aktualizace aplikace je zachová. Pro přenos dat ukonči aplikaci na obou Macích, zálohuj případná data v cíli a zkopíruj celou složku `StretchBreak` do stejného umístění. Složku najdeš i přes About StretchBreak → Show data in Finder. Přenesení samotné `.app` vytvoří na druhém Macu nové místní údaje.
 
-## Sestavení a testy
+Zápis změny stavu a případného záznamu historie proběhne v jedné SQLite transakci. Rozhraní potvrdí úspěch až po zápisu. Při chybě zachová dosavadní uložený stav, zablokuje další změny a nabídne `Retry saving`. Při ukončení upozorní na neuloženou změnu. Neplatnou databázi nepřepíše novými údaji.
 
-Projekt je Swift Package bez externích závislostí. V Xcode otevřete `Package.swift`, nebo ve složce projektu spusťte:
+## Zdrojový projekt a sestavení
+
+Zdrojový projekt je v tomto adresáři a v `dist/StretchBreak-1.0.0-source.zip`. Potřebuje Swift 6 a macOS SDK. Závisí pouze na systémových knihovnách.
 
 ```sh
-./Scripts/build-app.sh
 swift test --cache-path .build/cache
-./Scripts/export-previews.sh
+./Scripts/build-app.sh
+./Scripts/package-app.sh
+./Scripts/verify-package.sh
 ```
 
-Sestavovací skript vytvoří `.app`, ikonu a lokální podpis. Export náhledů spustí samostatnou instanci aplikace, vyrenderuje obrazovky a ukončí ji.
+Sestavení vytvoří `dist/Release/StretchBreak.app`. Balicí skript vytvoří ZIP pro přenos, zdrojový ZIP a kontrolní součty SHA-256. Sestavuje pouze `arm64`.
 
-Ověřeno na Apple Silicon s macOS 27.0.1 a Xcode 27.0, Swift 6.4. Výstup obsahuje pouze `arm64`. Intel nebyl sestaven ani testován. Deklarovaná minimální verze je macOS 14, na starších verzích macOS než 27 tento výstup nebyl spuštěn. Podpis je lokální, aplikace není notarizovaná.
+`StretchBreakCore` obsahuje pravidla přestávek, model, zdroj času a SQLite úložiště. `StretchBreakMac` zajišťuje systémové notifikace. `StretchBreak` obsahuje SwiftUI rozhraní a integraci menu baru, panelu, oken a probuzení přes AppKit. Čas, úložiště a doručování připomenutí lze v testech nahradit.
 
-Podrobné výsledky a omezení jsou v [záznamu ověření](Docs/Verification.md).
+## Ověření
 
-## Návrhová rozhodnutí k posouzení
+Prošlo 31 automatických testů. Testy zahrnují řízený čas, skutečné SQLite transakce a chyby zápisu, obnovu po restartu i integraci notifikací s nahraditelným systémovým klientem. Hlavní kroky byly ověřeny ve skutečně spuštěné aplikaci, včetně skutečného ukotveného panelu a obnovy po ukončení procesu.
 
-- Panel má šířku 380 bodů. Každý cvik ukazuje plán a vstup společně, aby výchozí počet šel potvrdit jediným kliknutím. Stojí za posouzení, zda tato hustota vyhovuje při práci v menu baru.
-- Po uzavření sady zůstává nad novým odpočtem krátké potvrzení do zahájení další sady. Případné automatické skrytí potvrzení je rozhodnutí pro další fázi.
-- Pořadí cviků mění tlačítka nahoru/dolů. Přetažení může být doplněno až po posouzení tohoto jednoduššího ovládání.
+Podrobnosti a omezení jsou v [Docs/Verification.md](Docs/Verification.md). Ověřeno na Apple Silicon s macOS 27.0.1, Xcode 27.0 a Swift 6.4. Jiný fyzický Mac a starší podporované macOS nebyly dostupné. Na tomto Macu jsou systémové notifikace zamítnuté, proto doručení banneru a kliknutí na skutečný banner nejsou označené za ověřené.
 
-Zdrojový kód je na větvi `codex/ui-prototype`. Stav prototypu je oddělený v `PrototypeCore`; rozhraní a vývojový export jsou v `StretchBreakPrototype`. Tento model slouží pro posouzení interakcí a není implementací budoucího časovače nebo ukládání.
+Pro opakování UI testů spusť `./Scripts/build-ui-test-app.sh` a otevři `dist/UITests/StretchBreak UI Tests.app`. Kopie používá vlastní databázi `.build/ui-test-data`, ovladatelný čas a neodesílá systémové notifikace. Tlačítko `Open menu bar panel` otevře skutečný produkční popover. Tento vývojový balíček není součástí ZIPu pro přenos. [UI scénáře](Docs/UITests.md) uvádějí kroky a očekávané výsledky.
+
+Původní prototyp je zachován na větvi `codex/ui-prototype`. Náhledy v `Previews` patří k této schválené fázi 0; neprokazují funkčnost současné aplikace.

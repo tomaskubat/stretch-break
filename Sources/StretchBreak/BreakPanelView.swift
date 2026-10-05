@@ -1,10 +1,10 @@
 import AppKit
-import PrototypeCore
+import StretchBreakCore
 import SwiftUI
 
 struct BreakPanelView: View {
-    @Bindable var store: PrototypeStore
-    @Environment(\.openWindow) private var openWindow
+    @Bindable var store: BreakEngine
+    var openWindow: (AppDestination) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,20 +23,28 @@ struct BreakPanelView: View {
             .padding(.horizontal, 20).padding(.top, 18).padding(.bottom, 14)
             Divider()
 
-            if store.phase == .active { activeBreak } else { countdown }
+            if store.hasUnsavedChange {
+                StorageErrorBanner(store: store).padding(12)
+                Divider()
+            }
+
+            Group {
+                if store.phase == .active { activeBreak } else { countdown }
+            }
+            .disabled(store.hasUnsavedChange)
 
             Divider()
             HStack(spacing: 16) {
-                Button { showWindow("settings") } label: {
+                Button { openWindow(.settings) } label: {
                     Label("Settings", systemImage: "gearshape")
                 }
                 .keyboardShortcut(",")
-                Button { showWindow("history") } label: {
+                Button { openWindow(.history) } label: {
                     Label("History", systemImage: "clock.arrow.circlepath")
                 }
                 Spacer()
                 Menu {
-                    Button("Prototype controls…") { showWindow("prototype") }
+                    Button("About StretchBreak…") { openWindow(.about) }
                     Divider()
                     Button("Quit StretchBreak") { NSApplication.shared.terminate(nil) }
                         .keyboardShortcut("q")
@@ -64,7 +72,7 @@ struct BreakPanelView: View {
                         Text(outcome == .completed ? "Break complete. Nicely done." : "Next break, fresh start.")
                             .font(.system(size: 12, weight: .semibold))
                         Text(outcome == .partial ? "Your completed exercises were recorded." :
-                                outcome == .skipped ? "Break skipped. Your interval has restarted." : "All \(store.drafts.count) exercises recorded.")
+                                outcome == .skipped ? "Break skipped. Your interval has restarted." : "All \(store.state.receipt?.total ?? 0) exercises recorded.")
                             .font(.system(size: 11)).foregroundStyle(.secondary)
                     }
                     Spacer(minLength: 0)
@@ -73,16 +81,16 @@ struct BreakPanelView: View {
                 .accessibilityIdentifier("break-result")
             }
 
-            Image(systemName: store.phase == .ready ? "figure.stand" : store.isPaused ? "pause.circle" : "timer")
+            Image(systemName: store.isPaused ? "pause.circle" : "timer")
                 .font(.system(size: 30, weight: .light)).foregroundStyle(Palette.accent)
                 .padding(.bottom, 12)
-            Text(store.phase == .ready ? "Time for a little movement" : store.isPaused ? "Take your time" : "Your next movement break")
+            Text(store.isPaused ? "Take your time" : "Your next movement break")
                 .font(.system(size: 13)).foregroundStyle(.secondary)
-            Text(store.phase == .ready ? "Ready" : store.countdownText)
+            Text(store.countdownText)
                 .font(.system(size: 44, weight: .light, design: .rounded))
                 .monospacedDigit().padding(.top, 4)
                 .accessibilityIdentifier("countdown")
-            Text("Every \(store.intervalMinutes) minutes · \(store.definitions.count) exercises")
+            Text("Every \(store.intervalMinutes) \(store.intervalMinutes == 1 ? "minute" : "minutes") · \(store.definitions.count) \(store.definitions.count == 1 ? "exercise" : "exercises")")
                 .font(.system(size: 11)).foregroundStyle(.secondary).padding(.top, 8)
 
             Button("Start break") { store.startBreak() }
@@ -114,11 +122,15 @@ struct BreakPanelView: View {
                 Text("Keep the planned reps, or make them your own.")
                     .font(.system(size: 12)).foregroundStyle(.secondary)
             }
-            VStack(spacing: 8) {
-                ForEach(Array(store.drafts.enumerated()), id: \.element.id) { index, draft in
-                    ExerciseRow(store: store, draft: draft, number: index + 1)
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(Array(store.drafts.enumerated()), id: \.element.id) { index, draft in
+                        ExerciseRow(store: store, draft: draft, number: index + 1)
+                    }
                 }
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .frame(height: min(330, CGFloat(store.drafts.reduce(0) { $0 + ($1.actual == nil ? 98 : 84) } + max(0, store.drafts.count - 1) * 8)))
             VStack(alignment: .leading, spacing: 9) {
                 HStack {
                     Text("\(store.completedCount) of \(store.drafts.count) completed")
@@ -139,14 +151,10 @@ struct BreakPanelView: View {
         .padding(20)
     }
 
-    private func showWindow(_ id: String) {
-        openWindow(id: id)
-        NSApplication.shared.activate(ignoringOtherApps: true)
-    }
 }
 
 private struct ExerciseRow: View {
-    let store: PrototypeStore
+    let store: BreakEngine
     let draft: ExerciseDraft
     let number: Int
     @FocusState private var inputFocused: Bool
@@ -164,6 +172,7 @@ private struct ExerciseRow: View {
                 }.frame(width: 26, height: 26).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(draft.name).font(.system(size: 13, weight: .medium))
+                        .lineLimit(2)
                     Text("Planned: \(draft.planned) reps").font(.system(size: 10)).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)

@@ -2,12 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "StretchBreakPrototype",
+    name: "StretchBreak",
     platforms: [.macOS(.v14)],
-    products: [.executable(name: "StretchBreakPrototype", targets: ["StretchBreakPrototype"])],
+    products: [.executable(name: "StretchBreak", targets: ["StretchBreak"])],
     targets: [
-        .target(name: "PrototypeCore"),
-        .executableTarget(name: "StretchBreakPrototype", dependencies: ["PrototypeCore"]),
-        .testTarget(name: "PrototypeCoreTests", dependencies: ["PrototypeCore"])
+        .systemLibrary(name: "CSQLite"),
+        .target(name: "StretchBreakCore", dependencies: ["CSQLite"]),
+        .target(name: "StretchBreakMac", dependencies: ["StretchBreakCore"]),
+        .executableTarget(name: "StretchBreak", dependencies: ["StretchBreakCore", "StretchBreakMac"]),
+        .testTarget(name: "StretchBreakCoreTests", dependencies: ["StretchBreakCore", "CSQLite"]),
+        .testTarget(name: "StretchBreakMacTests", dependencies: ["StretchBreakCore", "StretchBreakMac"])
     ]
 )

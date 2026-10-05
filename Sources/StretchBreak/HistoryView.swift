@@ -1,11 +1,11 @@
-import PrototypeCore
+import StretchBreakCore
 import SwiftUI
 
 struct HistoryView: View {
-    let store: PrototypeStore
+    let store: BreakEngine
     @State private var selectedID: UUID?
 
-    init(store: PrototypeStore, selectedID: UUID? = nil) {
+    init(store: BreakEngine, selectedID: UUID? = nil) {
         self.store = store
         _selectedID = State(initialValue: selectedID ?? store.history.first?.id)
     }
@@ -41,13 +41,13 @@ struct HistoryView: View {
                 }
                 .listStyle(.sidebar)
                 Divider()
-                Text("\(store.history.count) breaks recorded").font(.system(size: 11)).foregroundStyle(.secondary)
+                Text("\(store.history.count) \(store.history.count == 1 ? "break" : "breaks") recorded").font(.system(size: 11)).foregroundStyle(.secondary)
                     .padding(18)
             }
             .frame(width: 260)
             Divider()
             if let record = selected {
-                recordDetail(record)
+                ScrollView { recordDetail(record) }
             } else {
                 ContentUnavailableView("No breaks yet", systemImage: "clock.arrow.circlepath",
                                        description: Text("Completed and skipped breaks will appear here."))
@@ -56,6 +56,9 @@ struct HistoryView: View {
         }
         .frame(width: 790, height: 550)
         .background(Palette.background)
+        .onChange(of: store.history.map(\.id)) { _, ids in
+            if selectedID == nil || !ids.contains(selectedID!) { selectedID = ids.first }
+        }
     }
 
     private func recordDetail(_ record: BreakRecord) -> some View {
