@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Tests and distribution
+    runs-on: macos-26
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: zsh {0}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate the toolchain
+        run: |
+          set -euo pipefail
+          [[ $(uname -m) == arm64 ]]
+          xcodebuild -version
+          swift --version
+
+      - name: Check scripts, application metadata, and workflows
+        run: ./Scripts/check-config.sh
+
+      - name: Run tests
+        run: |
+          set -euo pipefail
+          swift test --cache-path .build/cache
+
+      - name: Build and verify distribution archives
+        run: |
+          set -euo pipefail
+          ./Scripts/build-app.sh
+          ./Scripts/package-app.sh
+          ./Scripts/verify-package.sh

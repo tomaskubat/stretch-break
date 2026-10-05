@@ -40,6 +40,9 @@ jobs:
           xcodebuild -version
           swift --version
 
+      - name: Check scripts, application metadata, and workflows
+        run: ./Scripts/check-config.sh
+
       - name: Run tests
         run: |
           set -euo pipefail
@@ -86,3 +89,6 @@ jobs:
             --title "StretchBreak $RELEASE_VERSION" \
             --notes-file .build/release-notes.md \
             --generate-notes
+
+      - name: Verify the published release and latest update feed
+        run: ./Scripts/verify-published-release.sh "$RELEASE_TAG"

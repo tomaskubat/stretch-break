@@ -102,3 +102,13 @@ Verified in the running test application:
 `Scripts/test-update-verification.py` also exercises the release verifier with a changed version, download URL, archive length, and signature. It requires each alteration to fail for the expected reason, restores the original feed, and verifies it again. The release workflow runs these checks before publishing.
 
 The actual GitHub-hosted download and GitHub Actions runner require the next published release for full production verification. This change does not publish a release. First installation and behavior on other physical Macs retain the limitations described above.
+
+## Průběžné CI a kontrola publikovaných souborů
+
+Dne 5. října 2026 prošly kontroly konfigurace pomocí `Scripts/check-config.sh`, včetně stažení actionlint 1.7.12, ověření připnutého SHA-256, kontroly obou workflow, syntaxe shellových skriptů a Info.plist. Prošlo všech 34 automatických testů, release sestavení 1.1.0 a ověření všech tří distribučních archivů. Místní ověření používalo Xcode 27.0; workflow zachovávají Xcode 26.6 na `macos-26`.
+
+Nová kontrola publikování stáhla soubory skutečného GitHub releasu 1.1.0 a feed přes produkční adresu `latest/download/appcast.xml`. Prošly kontrolní součty, verze a platforma feedu, Ed25519 podpis update ZIPu, podpisy rozbalené aplikace a shoda jejího Info.plist s očekávanou aplikací. Porovnání publikovaného manifestu používá manifest původního releasu, nikoli nově sestavených archivů s nepublikovanými změnami.
+
+Oddělené místní scénáře se skutečně podepsaným update ZIPem ověřily platný průchod a odmítnutí poškozeného archivu, nahrazeného manifestu, neplatného podpisu, pozměněného archivu s přepočítanými kontrolními součty, jiné verze v latest feedu a neočekávaného názvu souboru v manifestu. Všech šest chybných scénářů skončilo před rozbalením archivu. Znovu prošly také čtyři stávající testy změněné verze, URL, délky a podpisu pro výchozí cestu ověřovacího skriptu.
+
+Nová workflow jsou ověřená místně a pomocí actionlint. Jejich běh na GitHubu bude možné ověřit po pushnutí změn. Pravidla ochrany větve `main` při této změně nejsou upravená.

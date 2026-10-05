@@ -6,8 +6,9 @@ func require(_ condition: Bool, _ message: String) throws {
 }
 
 do {
-    try require(CommandLine.arguments.count == 2, "Expected a release version.")
+    try require((2...3).contains(CommandLine.arguments.count), "Expected a release version and an optional asset directory.")
     let version = CommandLine.arguments[1]
+    let assetDirectory = URL(fileURLWithPath: CommandLine.arguments.count == 3 ? CommandLine.arguments[2] : "dist", isDirectory: true)
     let archiveName = "StretchBreak-\(version)-update.zip"
     let plistData = try Data(contentsOf: URL(fileURLWithPath: "dist/Release/StretchBreak.app/Contents/Info.plist"))
     let plist = try PropertyListSerialization.propertyList(from: plistData, format: nil) as! [String: Any]
@@ -22,7 +23,7 @@ do {
     }
     try require(source["SUPublicEDKey"] as? String == encodedKey, "The packaged public key differs from the source.")
     let key = try Curve25519.Signing.PublicKey(rawRepresentation: keyData)
-    let feed = try XMLDocument(contentsOf: URL(fileURLWithPath: "dist/appcast.xml"))
+    let feed = try XMLDocument(contentsOf: assetDirectory.appendingPathComponent("appcast.xml"))
     let items = try feed.nodes(forXPath: "/rss/channel/item")
     try require(items.count == 1, "Expected one current release in the appcast.")
     let item = items[0]
@@ -39,7 +40,7 @@ do {
     }
     let downloadURL = "https://github.com/tomaskubat/stretch-break/releases/download/v\(version)/\(archiveName)"
     try require(enclosure.attribute(forName: "url")?.stringValue == downloadURL, "Unexpected update download URL.")
-    let archive = try Data(contentsOf: URL(fileURLWithPath: "dist/\(archiveName)"), options: .mappedIfSafe)
+    let archive = try Data(contentsOf: assetDirectory.appendingPathComponent(archiveName), options: .mappedIfSafe)
     try require(enclosure.attribute(forName: "length")?.stringValue == String(archive.count), "Incorrect archive length.")
     try require(key.isValidSignature(signature, for: archive), "The update signature does not match the app's public key.")
     print("Verified version, platform, download URL, and Ed25519 signature for \(archiveName).")
