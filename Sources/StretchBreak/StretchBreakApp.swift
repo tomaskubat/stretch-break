@@ -59,11 +59,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @MainActor
 final class AppRuntime: NSObject, NSMenuItemValidation {
     private(set) var engine: BreakEngine?
-    private let testDataDirectory = Bundle.main.object(forInfoDictionaryKey: "StretchBreakUITestDataDirectory") as? String
+    private let testDataDirectory: String?
     private var testing: Bool { testDataDirectory != nil || ProcessInfo.processInfo.arguments.contains("--ui-testing") }
     private lazy var updater = AppUpdater(enabled: !testing && Bundle.main.bundleURL.pathExtension == "app")
     private lazy var reminders = MacReminders(testing: testing)
-    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    private let statusItem: NSStatusItem
     private let popover = NSPopover()
     private var host: NSHostingController<AnyView>?
     private var windows: [String: NSWindow] = [:]
@@ -71,9 +71,19 @@ final class AppRuntime: NSObject, NSMenuItemValidation {
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     private var appearanceObserver: NSKeyValueObservation?
     private var statusAppearanceObserver: NSKeyValueObservation?
+    private var statusItemAppearance: NSAppearance.Name?
     private var notificationSetting: Bool?
     private var testClock: AdjustableClock?
     private var dataURL: URL?
+
+    init(statusItem: NSStatusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength),
+         testDataDirectory: String? = Bundle.main.object(forInfoDictionaryKey: "StretchBreakUITestDataDirectory") as? String,
+         reminders: MacReminders? = nil) {
+        self.statusItem = statusItem
+        self.testDataDirectory = testDataDirectory
+        super.init()
+        if let reminders { self.reminders = reminders }
+    }
 
     func start() {
         installMenu()
@@ -92,7 +102,11 @@ final class AppRuntime: NSObject, NSMenuItemValidation {
             }
         }
         statusAppearanceObserver = statusItem.button?.observe(\.effectiveAppearance) { [weak self] _, _ in
-            Task { @MainActor in self?.updateStatusItem() }
+            Task { @MainActor in
+                guard let self, let button = self.statusItem.button,
+                      button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) != self.statusItemAppearance else { return }
+                self.updateStatusItem()
+            }
         }
         loadData()
         updater.start()
@@ -168,7 +182,10 @@ final class AppRuntime: NSObject, NSMenuItemValidation {
 
     private func updateStatusItem() {
         guard let button = statusItem.button else { return }
-        button.image = MenuBarIcon.image(for: engine, appearance: button.effectiveAppearance)
+        let appearance = button.effectiveAppearance
+        // Record the appearance before assigning the image, which can notify the observer again.
+        statusItemAppearance = appearance.bestMatch(from: [.aqua, .darkAqua])
+        button.image = MenuBarIcon.image(for: engine, appearance: appearance)
         let hasError = engine?.hasUnsavedChange == true || engine == nil
         let description = hasError ? "StretchBreak: data needs attention" :
             engine?.activeBreak != nil ? "StretchBreak: break ready" :

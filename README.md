@@ -79,7 +79,7 @@ Pushing a new tag, such as `v1.1.0`, runs the tests, builds the app, signs the u
 
 ## Verification
 
-All 34 automated tests passed. They cover controlled time, real SQLite transactions and write failures, restoration after restart, notification integration with a replaceable system client, and rendered menu bar colors and shapes in both appearances. The main flows were verified in the running app, including the actual anchored panel and restoration after terminating the process.
+All 37 automated tests passed. They cover controlled time, real SQLite transactions and write failures, restoration after restart, notification integration with a replaceable system client, rendered menu bar colors and shapes in both appearances, and the status item's appearance observer in the actual app runtime. The main flows were verified in the running app, including the actual anchored panel and restoration after terminating the process.
 
 See [Docs/Verification.md](Docs/Verification.md) for details and limitations. Verified on Apple Silicon with macOS 27.0.1, Xcode 27.0, and Swift 6.4. Another physical Mac and older supported macOS versions were not available. System notifications are denied on this Mac, so delivery of an actual banner and clicking it have not been verified.
 

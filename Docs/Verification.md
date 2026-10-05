@@ -114,3 +114,22 @@ Oddělené místní scénáře se skutečně podepsaným update ZIPem ověřily 
 Commit `e4afe3e` prošel také [skutečným během CI na GitHubu](https://github.com/tomaskubat/stretch-break/actions/runs/37362259483). Runner použil Xcode 26.6 a Swift 6.3.3; prošly kontroly konfigurace, všech 34 testů ve čtyřech sadách, release sestavení a ověření distribučních archivů. Workflow se spustilo událostí `push` do `main`.
 
 Ochrana `main` vyžaduje kontrolu `Tests and distribution` od GitHub Actions a aktuální větev před sloučením. Nastavení bylo následně přečtené z GitHub API a potvrzené. Pravidlo se nevynucuje pro správce repozitáře.
+
+## Oprava smyčky ikony a vysokého CPU, 2026-10-05
+
+`AppRuntime` si nyní před přiřazením obrázku pamatuje rozlišení světlého nebo tmavého vzhledu použitého pro ikonu. Observer tlačítka aktualizuje ikonu pouze při změně tohoto rozlišení. Časovač a změny aplikačního stavu stále volají celou aktualizaci obrázku, tooltipu a accessibility labelu. Obrázek i uložené rozlišení používají tentýž zachycený `NSAppearance`.
+
+Nová sada `Tests/StretchBreakAppTests/StatusItemTests.swift` spouští skutečný `AppRuntime` se skutečným `NSStatusBarButton`, vlastní dočasnou SQLite databází a náhradou systémových notifikací. Regresní test přehrává oznámení nezměněného `effectiveAppearance` po přiřazení obrázku. Přehrávání má horní mez, aby chybná verze nemohla zablokovat testy. Před opravou deset výchozích oznámení vyvolalo 109 přiřazení obrázku a test selhal. Po opravě test prošel s limitem dvou přiřazení, který dovoluje případný tick časovače.
+
+Další integrační testy ověřují změnu skutečného obrázku tlačítka při přepnutí `.aqua` na `.darkAqua` a zpět, aktualizaci odpočtu časovačem, Pause a Resume, vznik a přeskočení přestávky a chybovou ikonu po skutečném odmítnutí SQLite UPDATE. `swift test --cache-path .build/cache` prošlo se všemi 37 testovacími funkcemi v pěti sadách. Release sestavení pro arm64 a kontrola ad hoc podpisu aplikace také prošly.
+
+Samostatná kopie opravené Release aplikace s vlastním bundle ID a databází v `.build/status-item-cpu-data` byla spuštěna v grafické relaci macOS. Skutečný ukotvený panel se otevřel a odpočet průběžně klesal. Testovací ovládání přepnulo rozhraní do světlého i tmavého vzhledu.
+
+| Stav opravené aplikace | Průměr CPU | Vyhodnocené vzorky |
+| --- | ---: | --- |
+| Klid, zavřený panel | 0,33 % | 0,4 %, 0,3 %, 0,3 % |
+| Otevřený panel | 0,8 % | 1,0 %, 0,7 %, 0,7 % |
+
+Měření používá pět sekundových vzorků `ps`; první dva zahazuje. Původní běžící aplikace během tohoto ověření také vykazovala nízké CPU. Tato čísla tedy nejsou přímým měřením poklesu oproti dříve reportovaným 98,2 %. Regresní test nezávisí na tom, zda AppKit na daném Macu sám opakovaná oznámení vyvolá, protože je cíleně přehrává přes skutečný observer a frontu hlavního aktoru.
+
+Vzhled systémového menu baru nebyl globálně přepínán. Změnu barev ikony při změně vzhledu jejího skutečného tlačítka ověřuje integrační test. Opravené lokální sestavení je v `dist/CPUFix/StretchBreak.app`; testovací kopie byla po měření ukončena. Publikování nového releasu a instalace opravy do původní běžící aplikace nejsou součástí tohoto ověření.

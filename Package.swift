@@ -16,6 +16,7 @@ let package = Package(
             "StretchBreakCore", "StretchBreakMac", .product(name: "Sparkle", package: "Sparkle")
         ]),
         .testTarget(name: "StretchBreakCoreTests", dependencies: ["StretchBreakCore", "CSQLite"]),
-        .testTarget(name: "StretchBreakMacTests", dependencies: ["StretchBreakCore", "StretchBreakMac"])
+        .testTarget(name: "StretchBreakMacTests", dependencies: ["StretchBreakCore", "StretchBreakMac"]),
+        .testTarget(name: "StretchBreakAppTests", dependencies: ["StretchBreak", "StretchBreakCore", "StretchBreakMac", "CSQLite"])
     ]
 )
