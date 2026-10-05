@@ -69,6 +69,7 @@ final class AppRuntime: NSObject {
     private var timer: Timer?
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     private var appearanceObserver: NSKeyValueObservation?
+    private var statusAppearanceObserver: NSKeyValueObservation?
     private var notificationSetting: Bool?
     private var testClock: AdjustableClock?
     private var dataURL: URL?
@@ -84,7 +85,13 @@ final class AppRuntime: NSObject {
         popover.behavior = .transient
         popover.animates = !testing
         appearanceObserver = NSApplication.shared.observe(\.effectiveAppearance) { [weak self] _, _ in
-            Task { @MainActor in self?.popover.appearance = NSApplication.shared.effectiveAppearance }
+            Task { @MainActor in
+                self?.popover.appearance = NSApplication.shared.effectiveAppearance
+                self?.updateStatusItem()
+            }
+        }
+        statusAppearanceObserver = statusItem.button?.observe(\.effectiveAppearance) { [weak self] _, _ in
+            Task { @MainActor in self?.updateStatusItem() }
         }
         loadData()
     }
@@ -121,7 +128,7 @@ final class AppRuntime: NSObject {
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
                 Task { @MainActor in
                     self?.engine?.tick()
-                    self?.updateTooltip()
+                    self?.updateStatusItem()
                 }
             }
             observeTimeChanges()
@@ -143,13 +150,7 @@ final class AppRuntime: NSObject {
     }
 
     private func refresh() {
-        let hasError = engine?.hasUnsavedChange == true || engine == nil
-        let symbol = hasError ? "exclamationmark.triangle.fill" : engine?.activeBreak != nil ? "exclamationmark.circle.fill" :
-            engine?.isPaused == true ? "pause.circle" : "figure.stand"
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "StretchBreak")
-        image?.isTemplate = true
-        statusItem.button?.image = image
-        updateTooltip()
+        updateStatusItem()
         if let engine, notificationSetting != engine.notificationsEnabled {
             notificationSetting = engine.notificationsEnabled
             reminders.configure(enabled: engine.notificationsEnabled, requestPermission: true)
@@ -163,10 +164,16 @@ final class AppRuntime: NSObject {
         }
     }
 
-    private func updateTooltip() {
+    private func updateStatusItem() {
+        guard let button = statusItem.button else { return }
+        button.image = MenuBarIcon.image(for: engine, appearance: button.effectiveAppearance)
         let hasError = engine?.hasUnsavedChange == true || engine == nil
-        statusItem.button?.toolTip = hasError ? "StretchBreak: data needs attention" :
-            engine?.activeBreak != nil ? "StretchBreak: break ready" : "StretchBreak: \(engine?.countdownText ?? "") until next break"
+        let description = hasError ? "StretchBreak: data needs attention" :
+            engine?.activeBreak != nil ? "StretchBreak: break ready" :
+            engine?.isPaused == true ? "StretchBreak: paused, \(engine?.countdownText ?? "") remaining" :
+            "StretchBreak: \(engine?.countdownText ?? "") until next break"
+        button.toolTip = description
+        button.setAccessibilityLabel(description)
     }
 
     @objc private func togglePanel() {
@@ -176,6 +183,7 @@ final class AppRuntime: NSObject {
     func showPanel() {
         guard engine != nil, let button = statusItem.button else { windows["error"]?.makeKeyAndOrderFront(nil); return }
         engine?.tick()
+        updateStatusItem()
         popover.appearance = NSApplication.shared.effectiveAppearance
         host?.view.layoutSubtreeIfNeeded()
         if let host { popover.contentSize = host.view.fittingSize }
@@ -222,6 +230,7 @@ final class AppRuntime: NSObject {
             let observer = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor in
                     self?.engine?.tick()
+                    self?.updateStatusItem()
                     if let self, let engine = self.engine { self.reminders.configure(enabled: engine.notificationsEnabled, requestPermission: false) }
                 }
             }
@@ -234,6 +243,7 @@ final class AppRuntime: NSObject {
         for (center, observer) in observers { center.removeObserver(observer) }
         observers.removeAll()
         appearanceObserver = nil
+        statusAppearanceObserver = nil
     }
 
     private func installMenu() {
@@ -282,6 +292,12 @@ final class AppRuntime: NSObject {
             VStack(alignment: .leading, spacing: 16) {
                 SectionHeading(title: "Isolated UI test session", subtitle: "Uses a separate database and controlled time.")
                 Text(dataURL?.path ?? "").font(.caption).textSelection(.enabled)
+                TimelineView(.periodic(from: .now, by: 1)) { [weak self] _ in
+                    HStack(spacing: 12) {
+                        if let image = self?.statusItem.button?.image { Image(nsImage: image).frame(width: 24, height: 24) }
+                        Text(self?.statusItem.button?.toolTip ?? "").font(.caption)
+                    }
+                }
                 Button("Open menu bar panel") { [weak self] in self?.showPanel() }
                 Button("Advance to next break") {
                     testClock.advance(engine.remainingSeconds + 1)

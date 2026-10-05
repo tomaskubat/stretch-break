@@ -19,6 +19,7 @@ Pokud opakuješ scénář se starými testovacími daty, počítej s jejich obno
 7. ⌘⇧S přeskočí celou sadu bez dialogu. History obsahuje Skipped, všechny skutečné počty chybí. Další přestávku zahaj Enter, potvrď jeden cvik a znovu použij ⌘⇧S. History ukáže Partially completed, potvrzený počet zachová, zbývající cviky jsou Skipped.
 8. Přepni Light appearance a Dark appearance. Prohlédni panel, Settings a History. Změna se týká pouze testovací aplikace.
 9. Ověř ⌘1, ⌘P, ⌘,, ⌘S, ⌘⇧H, ⌘⇧S, Escape, ⌘W a ⌘Q. Tab přesouvá fokus standardně mezi poli.
+10. Testovací okno zobrazuje náhled aktuálního obrázku přímo z tlačítka v menu baru a jeho popisek. U plného 60minutového intervalu je postava zelená. Se zavřeným panelem posouvej čas přes `Advance 10 minutes`. Po 40 minutách je oranžová, po 50 minutách tmavší oranžová. `Advance to next break` změní stejnou postavu na červenou. Pause používá neutrální ikonu pauzy, Resume obnoví barvu odpovídající zbývajícímu času. Po dokončení nebo přeskočení přestávky je postava znovu zelená. Ověř ji i ve světlém a tmavém vzhledu. Barvy se řídí poměrem uplynulého času k nastavenému intervalu.
 
 ## Skutečná chyba zápisu
 

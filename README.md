@@ -7,7 +7,7 @@ A native macOS app with an English interface. It runs in the menu bar, reminds y
 1. Open the [latest release](https://github.com/tomaskubat/stretch-break/releases/latest).
 2. Under Assets, download the ZIP ending in `-arm64.zip`, such as `StretchBreak-1.0.0-arm64.zip`.
 3. Extract the ZIP, move `StretchBreak.app` to Applications, and open it. Xcode and additional libraries are not required.
-4. Click the person icon in the menu bar to open the panel. When a break is ready, the icon changes to an exclamation mark.
+4. Click the person icon in the menu bar to open the panel. It stays green during the first 60% of the interval, then turns orange and gradually darkens as the break approaches. When a break is ready, the same person turns red. A paused countdown uses a neutral pause icon.
 
 The application ZIP also includes `Install.md` with installation instructions and `LICENSE` with the MIT license. The `-source.zip` asset contains the source project for building the app yourself.
 
@@ -69,7 +69,7 @@ Pushing a new tag, such as `v1.0.0`, runs the tests, builds the app, and verifie
 
 ## Verification
 
-All 31 automated tests passed. They cover controlled time, real SQLite transactions and write failures, restoration after restart, and notification integration with a replaceable system client. The main flows were verified in the running app, including the actual anchored panel and restoration after terminating the process.
+All 34 automated tests passed. They cover controlled time, real SQLite transactions and write failures, restoration after restart, notification integration with a replaceable system client, and rendered menu bar colors and shapes in both appearances. The main flows were verified in the running app, including the actual anchored panel and restoration after terminating the process.
 
 See [Docs/Verification.md](Docs/Verification.md) for details and limitations. Verified on Apple Silicon with macOS 27.0.1, Xcode 27.0, and Swift 6.4. Another physical Mac and older supported macOS versions were not available. System notifications are denied on this Mac, so delivery of an actual banner and clicking it have not been verified.
 
