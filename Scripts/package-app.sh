@@ -4,7 +4,7 @@ cd "${0:A:h:h}"
 source Scripts/release-version.sh
 resolve_release_version "$@"
 APP_PATH="$PWD/dist/Release/StretchBreak.app"
-codesign --verify --strict "$APP_PATH"
+codesign --verify --deep --strict "$APP_PATH"
 [[ $(lipo -archs "$APP_PATH/Contents/MacOS/StretchBreak") == arm64 ]]
 [[ $(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Contents/Info.plist") == local.stretchbreak.app ]]
 if [[ $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PATH/Contents/Info.plist") != "$STRETCHBREAK_VERSION" ||
@@ -18,9 +18,11 @@ ditto "$APP_PATH" "$STAGING_DIR/StretchBreak/StretchBreak.app"
 cp LICENSE "$STAGING_DIR/StretchBreak/LICENSE"
 awk -v version="$STRETCHBREAK_VERSION" 'NR == 1 { print "# StretchBreak " version " pro Apple Silicon"; next } { print }' Docs/Install.md > "$STAGING_DIR/StretchBreak/Install.md"
 ditto -c -k --sequesterRsrc --keepParent "$STAGING_DIR/StretchBreak" "$PWD/dist/$STRETCHBREAK_APP_ARCHIVE"
-for ITEM in Package.swift README.md LICENSE .gitignore .github Sources Tests Scripts Resources Docs Previews; do
+ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$PWD/dist/$STRETCHBREAK_UPDATE_ARCHIVE"
+for ITEM in Package.swift Package.resolved README.md LICENSE .gitignore .github Sources Tests Scripts Resources Docs Previews; do
     ditto --norsrc --noextattr "$PWD/$ITEM" "$STAGING_DIR/StretchBreak-source/$ITEM"
 done
 ditto -c -k --norsrc --noextattr --keepParent "$STAGING_DIR/StretchBreak-source" "$PWD/dist/$STRETCHBREAK_SOURCE_ARCHIVE"
-(cd dist && shasum -a 256 "$STRETCHBREAK_APP_ARCHIVE" "$STRETCHBREAK_SOURCE_ARCHIVE" > SHA256SUMS.txt)
-print "Packaged dist/$STRETCHBREAK_APP_ARCHIVE and dist/$STRETCHBREAK_SOURCE_ARCHIVE"
+rm -f dist/appcast.xml
+(cd dist && shasum -a 256 "$STRETCHBREAK_APP_ARCHIVE" "$STRETCHBREAK_SOURCE_ARCHIVE" "$STRETCHBREAK_UPDATE_ARCHIVE" > SHA256SUMS.txt)
+print "Packaged application, source, and update archives for $STRETCHBREAK_VERSION."

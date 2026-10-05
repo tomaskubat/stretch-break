@@ -57,10 +57,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @MainActor
-final class AppRuntime: NSObject {
+final class AppRuntime: NSObject, NSMenuItemValidation {
     private(set) var engine: BreakEngine?
     private let testDataDirectory = Bundle.main.object(forInfoDictionaryKey: "StretchBreakUITestDataDirectory") as? String
     private var testing: Bool { testDataDirectory != nil || ProcessInfo.processInfo.arguments.contains("--ui-testing") }
+    private lazy var updater = AppUpdater(enabled: !testing && Bundle.main.bundleURL.pathExtension == "app")
     private lazy var reminders = MacReminders(testing: testing)
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let popover = NSPopover()
@@ -94,6 +95,7 @@ final class AppRuntime: NSObject {
             Task { @MainActor in self?.updateStatusItem() }
         }
         loadData()
+        updater.start()
     }
 
     private func loadData() {
@@ -120,7 +122,7 @@ final class AppRuntime: NSObject {
             } else { clock = SystemTimeSource() }
             let store = try BreakEngine(repository: SQLiteRepository(url: url), clock: clock, reminders: reminders)
             engine = store
-            host = NSHostingController(rootView: AnyView(BreakPanelView(store: store, openWindow: { [weak self] in self?.open($0) })))
+            host = NSHostingController(rootView: AnyView(BreakPanelView(store: store, updater: updater, openWindow: { [weak self] in self?.open($0) })))
             popover.contentViewController = host
             store.onChange = { [weak self] in self?.refresh() }
             reminders.onOpenBreak = { [weak self] in self?.showPanel() }
@@ -198,7 +200,7 @@ final class AppRuntime: NSObject {
         guard let engine else { return }
         let view: AnyView
         switch destination {
-        case .settings: view = AnyView(SettingsView(store: engine, reminders: reminders))
+        case .settings: view = AnyView(SettingsView(store: engine, reminders: reminders, updater: updater))
         case .history: view = AnyView(HistoryView(store: engine))
         case .about: view = AnyView(AboutView(databaseURL: dataURL))
         }
@@ -260,6 +262,7 @@ final class AppRuntime: NSObject {
         action("Settings…", #selector(settingsFromMenu), ",")
         action("History", #selector(historyFromMenu), "h", modifiers: [.command, .shift])
         action("About StretchBreak", #selector(aboutFromMenu), "")
+        if updater.isEnabled { action("Check for Updates…", #selector(checkForUpdatesFromMenu), "") }
         app.addItem(.separator())
         let quit = NSMenuItem(title: "Quit StretchBreak", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         app.addItem(quit)
@@ -285,6 +288,10 @@ final class AppRuntime: NSObject {
     @objc private func settingsFromMenu() { open(.settings) }
     @objc private func historyFromMenu() { open(.history) }
     @objc private func aboutFromMenu() { open(.about) }
+    @objc private func checkForUpdatesFromMenu() { popover.performClose(nil); updater.checkForUpdates() }
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        menuItem.action != #selector(checkForUpdatesFromMenu) || updater.canCheckForUpdates
+    }
 
     private func openTestControls() {
         guard let engine, let testClock else { return }

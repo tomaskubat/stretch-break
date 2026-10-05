@@ -20,4 +20,5 @@ resolve_release_version() {
     fi
     STRETCHBREAK_APP_ARCHIVE="StretchBreak-${STRETCHBREAK_VERSION}-arm64.zip"
     STRETCHBREAK_SOURCE_ARCHIVE="StretchBreak-${STRETCHBREAK_VERSION}-source.zip"
+    STRETCHBREAK_UPDATE_ARCHIVE="StretchBreak-${STRETCHBREAK_VERSION}-update.zip"
 }

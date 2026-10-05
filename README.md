@@ -5,7 +5,7 @@ A native macOS app with an English interface. It runs in the menu bar, reminds y
 ## Download and run the app
 
 1. Open the [latest release](https://github.com/tomaskubat/stretch-break/releases/latest).
-2. Under Assets, download the ZIP ending in `-arm64.zip`, such as `StretchBreak-1.0.0-arm64.zip`.
+2. Under Assets, download the ZIP ending in `-arm64.zip`, such as `StretchBreak-1.1.0-arm64.zip`.
 3. Extract the ZIP, move `StretchBreak.app` to Applications, and open it. Xcode and additional libraries are not required.
 4. Click the person icon in the menu bar to open the panel. It stays green during the first 60% of the interval, then turns orange and gradually darkens as the break approaches. When a break is ready, the same person turns red. A paused countdown uses a neutral pause icon.
 
@@ -14,6 +14,14 @@ The application ZIP also includes `Install.md` with installation instructions an
 To use the app on another Mac, download and extract the same application ZIP there. To transfer your existing settings and history, follow the instructions in [Data](#data).
 
 The app has an ad hoc signature, but it is not signed with a Developer ID certificate or notarized. No signing identity is available in the build environment. If macOS blocks the first launch, after attempting to open this app you can use System Settings → Privacy & Security → Open Anyway. [Apple Support](https://support.apple.com/en-us/102445) explains the procedure. A managed Mac may restrict this option.
+
+## Updates
+
+The app uses Sparkle 2 to check GitHub Releases for new versions once a day. You can also choose `Check for Updates…` from the panel's More options menu or Settings. Settings lets you turn automatic checks off and opt into automatic downloading and installation. Update preferences take effect immediately, independently of `Save changes`.
+
+Updates are verified with an Ed25519 public key embedded in the app before extraction. GitHub hosts both the update archive and `appcast.xml`; no account is required. Update checks contact GitHub, but system profiling is disabled. Your database stays outside the app bundle and survives replacement of the app.
+
+Versions released before the updater was added require one manual installation of a version containing it. The app remains ad hoc signed and is not notarized.
 
 ## Using the app
 
@@ -40,7 +48,7 @@ The timer uses a saved deadline. Time spent with the Mac asleep or the app close
 
 ## Data
 
-All data is stored in `~/Library/Application Support/StretchBreak/StretchBreak.sqlite`. The database contains settings, the saved deadline or paused state, the unfinished break including entered values, and history. The app requires no account or internet connection and does not sync data.
+All data is stored in `~/Library/Application Support/StretchBreak/StretchBreak.sqlite`. The database contains settings, the saved deadline or paused state, the unfinished break including entered values, and history. The app requires no account and does not sync data. Break reminders, settings, and history work offline; checking and downloading updates requires an internet connection.
 
 Data is stored separately from the `.app` bundle and survives app updates. To transfer data, quit the app on both Macs, back up any existing data on the destination Mac, and copy the entire `StretchBreak` folder to the same location. You can also find the folder through About StretchBreak → Show data in Finder. Transferring only the `.app` starts with fresh local data on the other Mac.
 
@@ -48,20 +56,22 @@ State changes and any corresponding history entry are saved in a single SQLite t
 
 ## Building from source
 
-The source project is in this directory and in `dist/StretchBreak-1.0.0-source.zip`. It requires Swift 6 and the macOS SDK. It depends only on system libraries.
+The source project is in this directory and in the release's `-source.zip` archive. It requires Swift 6 and the macOS SDK. Swift Package Manager downloads the pinned Sparkle 2 dependency on the first build. Sparkle and its license are included in the application bundle.
 
 ```sh
 swift test --cache-path .build/cache
 ./Scripts/build-app.sh
 ./Scripts/package-app.sh
+./Scripts/generate-appcast.sh
+python3 Scripts/test-update-verification.py 1.1.0
 ./Scripts/verify-package.sh
 ```
 
-The build produces `dist/Release/StretchBreak.app`. The packaging script creates a portable application ZIP, a source ZIP, and SHA-256 checksums. Only `arm64` is built.
+The build produces `dist/Release/StretchBreak.app`. The packaging script creates a portable application ZIP, a source ZIP, an update ZIP containing only the app, and SHA-256 checksums. `generate-appcast.sh` needs the matching signing key in the Keychain or `SPARKLE_PRIVATE_KEY` environment variable. Only `arm64` is built.
 
 ## GitHub releases
 
-Pushing a new tag, such as `v1.0.0`, runs the tests, builds the app, and verifies the packages. If all steps succeed, the workflow publishes a GitHub release with the Apple Silicon app, source archive, and checksums. The app version and filenames come from the tag. [Docs/Releasing.md](Docs/Releasing.md) describes setup, publishing, and local verification.
+Pushing a new tag, such as `v1.1.0`, runs the tests, builds the app, signs the update archive, and verifies the packages and appcast. If all steps succeed, the workflow publishes a GitHub release with the Apple Silicon app, source archive, update archive, appcast, and checksums. The app version and filenames come from the tag. [Docs/Releasing.md](Docs/Releasing.md) describes setup, publishing, and local verification.
 
 ## App structure
 

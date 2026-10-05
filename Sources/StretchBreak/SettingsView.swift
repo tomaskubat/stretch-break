@@ -21,14 +21,16 @@ private struct EditableExercise: Identifiable, Equatable {
 struct SettingsView: View {
     let store: BreakEngine
     let reminders: MacReminders
+    let updater: AppUpdater
     @State private var intervalText: String
     @State private var notifications: Bool
     @State private var exercises: [EditableExercise]
     @State private var saved = false
 
-    init(store: BreakEngine, reminders: MacReminders) {
+    init(store: BreakEngine, reminders: MacReminders, updater: AppUpdater) {
         self.store = store
         self.reminders = reminders
+        self.updater = updater
         _intervalText = State(initialValue: String(store.intervalMinutes))
         _notifications = State(initialValue: store.notificationsEnabled)
         _exercises = State(initialValue: store.definitions.map(EditableExercise.init))
@@ -124,6 +126,7 @@ struct SettingsView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }.disabled(store.hasUnsavedChange)
+                    if updater.isEnabled { UpdateSettingsView(updater: updater) }
                 }.padding(28)
             }
             Divider()

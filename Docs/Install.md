@@ -1,4 +1,4 @@
-# StretchBreak 1.0.0 pro Apple Silicon
+# StretchBreak 1.1.0 pro Apple Silicon
 
 Potřebuješ Mac s čipem Apple Silicon a macOS 14 nebo novější. Ověřeno na macOS 27.0.1. Xcode ani další instalace nejsou potřeba.
 
@@ -13,6 +13,8 @@ Data se ukládají pouze na daném Macu do:
 `~/Library/Application Support/StretchBreak/StretchBreak.sqlite`
 
 Přenesení samotné aplikace začne na druhém Macu s novými daty. Pro přenos historie, nastavení a rozpracované přestávky ukonči aplikaci na obou počítačích, zálohuj případná data v cíli a zkopíruj celou složku StretchBreak do stejného umístění. Data najdeš také přes About StretchBreak → Show data in Finder. Aktualizace souboru .app uložená data zachová.
+
+Nové verze aplikace se kontrolují jednou denně přes GitHub Releases. Ruční kontrolu najdeš v menu More options → Check for Updates… nebo v Settings. V Settings lze vypnout automatické kontroly nebo zapnout automatické stahování a instalaci. Aktualizační archiv se před rozbalením ověřuje digitálním podpisem. První přechod z verze bez updateru vyžaduje ruční instalaci.
 
 Start break zahájí přestávku předčasně. Done potvrzuje plánovaný nebo upravený počet, Undo umožní opravu otevřené sady. Poslední Done automaticky dokončí přestávku. Skip & restart zachová potvrzené cviky a zbytek přeskočí. Zavření panelu zachová rozpracovanou přestávku.
 

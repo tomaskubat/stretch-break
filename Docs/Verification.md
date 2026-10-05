@@ -82,3 +82,23 @@ Dne 5. října 2026 po přidání workflow znovu prošlo všech 31 testovacích 
 Místní sestavení, balení a rozbalení zkušební verze `v1.2.3` prošlo. Tag se promítl do obou verzí v Info.plist, názvů archivů a instalačního návodu; zdrojová šablona zůstala na 1.0.0. Kontrola podpisu, arm64, závislostí, shody zdrojů včetně workflow a SHA-256 prošla. Balení jako `v1.2.4` správně odmítlo sestavenou aplikaci 1.2.3.
 
 Publikační krok byl spuštěn místně s náhradou GitHub CLI, která pouze zaznamenala argumenty. Ověřeny byly přesně tři assety, existující soubory, tag, titul, poznámky a volby `--verify-tag` a `--generate-notes`. Žádný release se při tomto ověření nezveřejnil. Skutečný běh na GitHubu a Xcode 26.6 zatím nejsou ověřené; repo při přípravě nemá nastavený GitHub remote.
+
+## Sparkle updates, 2026-10-05
+
+Sparkle 2.10.0 is pinned in `Package.swift` and `Package.resolved`. All 34 existing automated tests passed after integration. The local 1.0.2 release build, portable ZIP, source ZIP, app-only update ZIP, appcast metadata, Ed25519 signature, bundled license, nested ad hoc signatures, and checksums passed verification.
+
+A separate copy of the application was compiled with the production updater and interface. Its UI-test guard was changed only in the temporary test sources to enable the updater. The test bundles used a separate bundle identifier, their own SQLite database, and a feed served over localhost. Neither the normal database nor the published GitHub releases were changed.
+
+Verified in the running test application:
+
+- Manual checks from Settings and the panel menu found a signed 1.0.2 update from a 1.0.1 installation.
+- Download, verification, installation, and relaunch completed with ad hoc signatures.
+- A changed interval, renamed exercise, completed break in history, and paused countdown survived the update. All rows of the SQLite database matched the snapshot taken before installation.
+- An archive offered with an invalid Ed25519 signature was rejected before extraction. The installed version was unchanged.
+- Automatic checks and downloads remained enabled after quitting and reopening when using the same standard preferences storage as the distribution app.
+- On relaunch, the app checked and downloaded a signed 1.0.3 update in the background. Quitting installed it automatically, with the SQLite rows again unchanged.
+- Update settings fit within the existing Settings scroll view.
+
+`Scripts/test-update-verification.py` also exercises the release verifier with a changed version, download URL, archive length, and signature. It requires each alteration to fail for the expected reason, restores the original feed, and verifies it again. The release workflow runs these checks before publishing.
+
+The actual GitHub-hosted download and GitHub Actions runner require the next published release for full production verification. This change does not publish a release. First installation and behavior on other physical Macs retain the limitations described above.

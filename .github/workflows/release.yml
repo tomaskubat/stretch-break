@@ -46,10 +46,18 @@ jobs:
           swift test --cache-path .build/cache
 
       - name: Build and verify release assets
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
           set -euo pipefail
+          if [[ -z "$SPARKLE_PRIVATE_KEY" ]]; then
+            print -u2 'Set the SPARKLE_PRIVATE_KEY repository secret before releasing.'
+            exit 1
+          fi
           ./Scripts/build-app.sh "$RELEASE_TAG"
           ./Scripts/package-app.sh "$RELEASE_TAG"
+          ./Scripts/generate-appcast.sh "$RELEASE_TAG"
+          python3 Scripts/test-update-verification.py "$RELEASE_TAG"
           ./Scripts/verify-package.sh "$RELEASE_TAG"
 
       - name: Publish the GitHub release
@@ -62,13 +70,17 @@ jobs:
           cat > .build/release-notes.md <<'NOTES'
           Requires Apple Silicon and macOS 14 or later.
 
-          Download the arm64 ZIP for the ready-to-run application and installation guide. The source ZIP contains the matching source project. SHA256SUMS.txt contains checksums for both archives.
+          Download the arm64 ZIP for the ready-to-run application and installation guide. The source ZIP contains the matching source project. SHA256SUMS.txt contains checksums for the release archives and update feed.
+
+          Automatic updates use appcast.xml and the update ZIP. Existing versions without the updater need one manual installation. Update archives are signed with Ed25519.
 
           The application has an ad hoc signature. It is not Developer ID signed or notarized; macOS may require approval of the first launch in Privacy & Security.
           NOTES
           gh release create "$RELEASE_TAG" \
             "dist/StretchBreak-${RELEASE_VERSION}-arm64.zip" \
             "dist/StretchBreak-${RELEASE_VERSION}-source.zip" \
+            "dist/StretchBreak-${RELEASE_VERSION}-update.zip" \
+            dist/appcast.xml \
             dist/SHA256SUMS.txt \
             --verify-tag \
             --title "StretchBreak $RELEASE_VERSION" \

@@ -1,43 +1,70 @@
 # Vydávání na GitHubu
 
-Workflow v `.github/workflows/release.yml` vytvoří release po odeslání nového tagu ve tvaru `vX.Y.Z`, například `v1.0.0` nebo `v1.0.1`. Čísla nesmějí mít počáteční nuly. Sufixy jako `-beta` nejsou podporované.
+Workflow v `.github/workflows/release.yml` vytvoří release po odeslání nového tagu ve tvaru `vX.Y.Z`, například `v1.1.0`. Čísla nesmějí mít počáteční nuly. Sufixy jako `-beta` nejsou podporované.
 
-## První nastavení
+## Nastavení podpisu aktualizací
 
-Nahraj toto repo včetně workflow na GitHub a nastav jeho adresu jako remote `origin`. GitHub Actions musí být v repozitáři povolené. Workflow používá automatický `GITHUB_TOKEN` s oprávněním `contents: write`; pro tento způsob vydávání není potřeba přidávat osobní token ani jiné secrets. Pokud organizace omezuje Actions nebo oprávnění tokenu, musí její nastavení dovolovat tento workflow a vytváření releasů.
+GitHub Actions musí být povolené. Workflow používá automatický `GITHUB_TOKEN` s oprávněním `contents: write` pro publikování releasu a repository secret `SPARKLE_PRIVATE_KEY` pro podpis aktualizačních archivů. Osobní GitHub token do aplikace ani workflow nepatří.
+
+Podpisový klíč pro toto repo byl vytvořený pomocí Sparkle `generate_keys` a uložený v macOS Klíčence pod účtem `local.stretchbreak.app`. Veřejný klíč je v `Resources/Info.plist` jako `SUPublicEDKey`; soukromý klíč je také v GitHub Actions Secrets. Klíč není součástí zdrojových archivů.
+
+Pro nastavení jiné kopie repozitáře nejprve spusť `swift package resolve --cache-path .build/cache`. Nástroje Sparkle potom najdeš v `.build/artifacts/sparkle/Sparkle/bin/`. Existující soukromý klíč lze exportovat z Klíčenky a uložit do repository secret bez vypsání jeho obsahu:
+
+```sh
+umask 077
+.build/artifacts/sparkle/Sparkle/bin/generate_keys --account local.stretchbreak.app -x /private/tmp/stretchbreak-update-key
+gh secret set SPARKLE_PRIVATE_KEY --repo tomaskubat/stretch-break < /private/tmp/stretchbreak-update-key
+rm /private/tmp/stretchbreak-update-key
+```
+
+Zálohuj Klíčenku nebo exportovaný klíč na bezpečné místo. Zachovej stejný klíč pro další verze. Bez Developer ID není k dispozici náhradní ověření, které by umožnilo obnovit aktualizace po ztrátě klíče. Nový veřejný klíč by vyžadoval ruční instalaci aplikace.
 
 ## Vytvoření releasu
 
 Na commitu, který chceš vydat, vytvoř nový tag a odešli ho:
 
 ```sh
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
-Tag musí ukazovat na commit obsahující release workflow. Jeho průběh najdeš na GitHubu v Actions → Release. Po úspěšném dokončení se v Releases objeví:
+Tag musí ukazovat na commit obsahující release workflow. Po úspěšném dokončení Actions → Release se v Releases objeví:
 
-- `StretchBreak-1.0.0-arm64.zip` — hotová aplikace a návod k instalaci.
-- `StretchBreak-1.0.0-source.zip` — odpovídající zdrojový projekt včetně testů, skriptů a workflow.
-- `SHA256SUMS.txt` — SHA-256 kontrolní součty obou archivů.
+- `StretchBreak-1.1.0-arm64.zip`, hotová aplikace s návodem k instalaci a licencí.
+- `StretchBreak-1.1.0-source.zip`, odpovídající zdrojový projekt včetně `Package.resolved`.
+- `StretchBreak-1.1.0-update.zip`, archiv pro Sparkle obsahující pouze `StretchBreak.app`.
+- `appcast.xml`, verze, požadavky na Mac, odkaz na konkrétní update ZIP a jeho Ed25519 podpis.
+- `SHA256SUMS.txt`, kontrolní součty všech tří archivů a feedu.
 
-Další verzi vydáš novým tagem, například `v1.0.1`. Názvy archivů, verze v About a metadata aplikace se odvozují z tagu. Kvůli vydání není potřeba měnit verzi v `Resources/Info.plist`; ta slouží jako výchozí verze pro místní sestavení bez argumentu.
+Verze aplikace a názvy archivů se odvozují z tagu. `Resources/Info.plist` poskytuje výchozí verzi pro místní sestavení bez argumentu.
 
-Workflow na Apple Silicon runneru `macos-26` s Xcode 26.6 nejprve ověří tag, spustí testy a sestaví aplikaci. Potom ověří podpis, architekturu, verzi, systémové závislosti, kontrolní součty a shodu rozbalených zdrojů. Zveřejnění proběhne až po úspěchu všech těchto kroků. Publikuje pouze uvedené tři soubory.
+Workflow na Apple Silicon runneru `macos-26` s Xcode 26.6 ověří tag, spustí testy, sestaví aplikaci se Sparkle a podepíše aplikaci i pomocné procesy ad hoc. Potom zabalí archivy, vytvoří feed a ověří verzi, architekturu, podpisy, odkazy, kontrolní součty a shodu zdrojů. Ed25519 podpis updateru ověřuje vůči veřejnému klíči skutečně zabalené aplikace. Chybějící secret nebo neodpovídající klíč zastaví workflow před publikováním.
 
-Při chybě otevři log neúspěšného kroku. Chyba před publikováním release nevytvoří. Již existující release se automaticky nepřepisuje; každý tag používej pro jednu verzi. Selhání při komunikaci s GitHubem může zanechat rozpracovaný release, který je potřeba nejprve zkontrolovat v Releases.
+Feed používá stálou adresu `https://github.com/tomaskubat/stretch-break/releases/latest/download/appcast.xml`. Odkaz na update ZIP uvnitř feedu ukazuje na konkrétní tag. Feed se vytváří pro aktuální release a nabízí plnou aktualizaci, bez delta balíčků.
 
-## Místní ověření stejné verze
+Každý tag používej pro jednu verzi a vydávej rostoucí čísla verzí. Pokud potřebuješ zpřístupnit starší opravu vedle novější řady nebo změnit podporované platformy, je potřeba upravit publikování feedu tak, aby zachovával více vhodných verzí. Již existující release se automaticky nepřepisuje. Selhání při komunikaci s GitHubem může zanechat rozpracovaný release, který nejprve zkontroluj v Releases.
+
+## Místní ověření
 
 ```sh
 swift test --cache-path .build/cache
-./Scripts/build-app.sh v1.0.1
-./Scripts/package-app.sh v1.0.1
-./Scripts/verify-package.sh v1.0.1
+./Scripts/build-app.sh v1.1.0
+./Scripts/package-app.sh v1.1.0
+./Scripts/generate-appcast.sh v1.1.0
+python3 Scripts/test-update-verification.py v1.1.0
+./Scripts/verify-package.sh v1.1.0
 ```
 
-Při balení jiné verze než má sestavená aplikace skript skončí chybou. Místní skripty přijímají také verzi bez `v`. Hotové soubory vznikají v `dist/`, které se do Gitu neukládá. Při místním opakování s více verzemi platí `SHA256SUMS.txt` pro poslední zabalenou verzi.
+`generate-appcast.sh` používá klíč v Klíčence pod účtem `local.stretchbreak.app`; macOS může požádat o povolení přístupu. V CI čte `SPARKLE_PRIVATE_KEY` ze standardního vstupu podpisového nástroje. Soukromý klíč se nepředává jako argument procesu ani se nezapisuje do distribuovaných souborů.
 
-Balíček má ad hoc podpis, bez certifikátu Developer ID a notarizace. Automatický release tedy zachovává současný způsob instalace a může vyžadovat schválení prvního spuštění v macOS. Podrobnosti jsou v přiloženém `Install.md`. Pro podepisování a notarizaci by bylo potřeba doplnit Apple Developer certifikát a přihlašovací údaje; tento workflow je nevyžaduje.
+Při balení jiné verze než má sestavená aplikace skript skončí chybou. Místní skripty přijímají také verzi bez `v`. Hotové soubory vznikají v `dist/`, které se do Gitu neukládá. Při opakovaném balení více verzí platí `SHA256SUMS.txt` a `appcast.xml` pro poslední zabalenou verzi.
 
-Dokumentace: [spouštění při odeslání tagů a oprávnění workflow](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax), [vytváření releasu přes GitHub CLI](https://cli.github.com/manual/gh_release_create), [macOS runner a dostupné Xcode](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md).
+## Chování aplikace
+
+Sparkle kontroluje nové verze jednou denně. Ruční kontrola je v menu More options a v Settings. Automatické kontroly jsou ve výchozím stavu zapnuté; automatické stahování a instalace vyžadují zapnutí v Settings nebo dialogu Sparkle. Tyto volby se ukládají ihned. Bez připojení funguje zbytek aplikace dál.
+
+Archiv se před rozbalením ověřuje pomocí Ed25519. System profiling je vypnutý. Historie a nastavení zůstávají v databázi mimo `.app`. Oddělené UI testy updater nespouštějí. Verze bez updateru potřebují jednu ruční instalaci verze, která ho obsahuje.
+
+Aplikace zůstává ad hoc podepsaná, bez Developer ID a notarizace. První instalace proto může vyžadovat schválení spuštění v macOS. Podrobnosti jsou v přiloženém `Install.md`.
+
+Dokumentace: [Sparkle](https://sparkle-project.org/documentation/), [publikování aktualizací](https://sparkle-project.org/documentation/publishing/), [odkazy na latest release](https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases), [GitHub workflow](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax).

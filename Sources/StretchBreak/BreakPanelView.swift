@@ -4,6 +4,7 @@ import SwiftUI
 
 struct BreakPanelView: View {
     @Bindable var store: BreakEngine
+    @ObservedObject var updater: AppUpdater
     var openWindow: (AppDestination) -> Void
 
     var body: some View {
@@ -45,6 +46,10 @@ struct BreakPanelView: View {
                 Spacer()
                 Menu {
                     Button("About StretchBreak…") { openWindow(.about) }
+                    if updater.isEnabled {
+                        Button("Check for Updates…") { updater.checkForUpdates() }
+                            .disabled(!updater.canCheckForUpdates)
+                    }
                     Divider()
                     Button("Quit StretchBreak") { NSApplication.shared.terminate(nil) }
                         .keyboardShortcut("q")
