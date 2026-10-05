@@ -307,9 +307,12 @@ private final class AdjustableClock: TimeSource {
 
 private struct AboutView: View {
     let databaseURL: URL?
+    private var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            SectionHeading(title: "StretchBreak", subtitle: "Version 1.0 · Movement breaks for your Mac")
+            SectionHeading(title: "StretchBreak", subtitle: "Version \(version) · Movement breaks for your Mac")
             Text("Your settings, history, and current break are stored locally on this Mac.")
                 .font(.callout).fixedSize(horizontal: false, vertical: true)
             if let databaseURL {

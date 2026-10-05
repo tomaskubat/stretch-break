@@ -54,6 +54,12 @@ swift test --cache-path .build/cache
 
 Sestavení vytvoří `dist/Release/StretchBreak.app`. Balicí skript vytvoří ZIP pro přenos, zdrojový ZIP a kontrolní součty SHA-256. Sestavuje pouze `arm64`.
 
+## GitHub Releases
+
+Odeslání nového tagu, například `v1.0.0`, spustí testy, sestavení a kontrolu balíčků. Po úspěchu workflow zveřejní GitHub release s aplikací pro Apple Silicon, zdrojovým archivem a kontrolními součty. Verze aplikace a názvy souborů vycházejí z tagu. Postup nastavení, vydání a místního ověření popisuje [Docs/Releasing.md](Docs/Releasing.md).
+
+## Struktura aplikace
+
 `StretchBreakCore` obsahuje pravidla přestávek, model, zdroj času a SQLite úložiště. `StretchBreakMac` zajišťuje systémové notifikace. `StretchBreak` obsahuje SwiftUI rozhraní a integraci menu baru, panelu, oken a probuzení přes AppKit. Čas, úložiště a doručování připomenutí lze v testech nahradit.
 
 ## Ověření

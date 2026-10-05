@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-26
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: zsh {0}
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - name: Check out the tagged commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate the release tag and toolchain
+        id: version
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" == v* ]]
+          source Scripts/release-version.sh
+          resolve_release_version "$RELEASE_TAG"
+          print -r -- "number=$STRETCHBREAK_VERSION" >> "$GITHUB_OUTPUT"
+          [[ $(uname -m) == arm64 ]]
+          xcodebuild -version
+          swift --version
+
+      - name: Run tests
+        run: |
+          set -euo pipefail
+          swift test --cache-path .build/cache
+
+      - name: Build and verify release assets
+        run: |
+          set -euo pipefail
+          ./Scripts/build-app.sh "$RELEASE_TAG"
+          ./Scripts/package-app.sh "$RELEASE_TAG"
+          ./Scripts/verify-package.sh "$RELEASE_TAG"
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ steps.version.outputs.number }}
+        run: |
+          set -euo pipefail
+          cat > .build/release-notes.md <<'NOTES'
+          Requires Apple Silicon and macOS 14 or later.
+
+          Download the arm64 ZIP for the ready-to-run application and installation guide. The source ZIP contains the matching source project. SHA256SUMS.txt contains checksums for both archives.
+
+          The application has an ad hoc signature. It is not Developer ID signed or notarized; macOS may require approval of the first launch in Privacy & Security.
+          NOTES
+          gh release create "$RELEASE_TAG" \
+            "dist/StretchBreak-${RELEASE_VERSION}-arm64.zip" \
+            "dist/StretchBreak-${RELEASE_VERSION}-source.zip" \
+            dist/SHA256SUMS.txt \
+            --verify-tag \
+            --title "StretchBreak $RELEASE_VERSION" \
+            --notes-file .build/release-notes.md \
+            --generate-notes

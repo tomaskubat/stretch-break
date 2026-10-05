@@ -74,3 +74,11 @@ Automatické ovládání nezpřístupnilo samostatnou ikonu v systémové lišt�
 Uspání/probuzení a změny systémového času byly ověřeny s ovladatelným časem a reálnou databází. Fyzické uspání počítače, změna jeho systémových hodin a psaní v jiné aplikaci během vypršení nebyly automatizovány. Produkční běh potvrdil, že při vypršení nedochází k otevření panelu ani změně fokusu v Settings; metoda doručení připomenutí nevolá aktivaci aplikace.
 
 Druhý fyzický Mac, macOS 14 až 26, Intel, VoiceOver, režimy Focus a všechny kombinace nastavení klávesnice nebyly ověřeny. Intel není součástí sestavení. Podpis je ad hoc, nikoli Developer ID, aplikace není notarizovaná. Přenos na druhý Mac může vyžadovat uživatelské povolení prvního spuštění dle postupu Apple v Install.md.
+
+## Příprava GitHub Releases
+
+Dne 5. října 2026 po přidání workflow znovu prošlo všech 31 testovacích funkcí. `actionlint` 1.7.12 ověřil `.github/workflows/release.yml`. Validace verze přijala pět platných vstupů a odmítla třináct neplatných, včetně suffixu, počátečních nul a nadbytečného argumentu.
+
+Místní sestavení, balení a rozbalení zkušební verze `v1.2.3` prošlo. Tag se promítl do obou verzí v Info.plist, názvů archivů a instalačního návodu; zdrojová šablona zůstala na 1.0.0. Kontrola podpisu, arm64, závislostí, shody zdrojů včetně workflow a SHA-256 prošla. Balení jako `v1.2.4` správně odmítlo sestavenou aplikaci 1.2.3.
+
+Publikační krok byl spuštěn místně s náhradou GitHub CLI, která pouze zaznamenala argumenty. Ověřeny byly přesně tři assety, existující soubory, tag, titul, poznámky a volby `--verify-tag` a `--generate-notes`. Žádný release se při tomto ověření nezveřejnil. Skutečný běh na GitHubu a Xcode 26.6 zatím nejsou ověřené; repo při přípravě nemá nastavený GitHub remote.

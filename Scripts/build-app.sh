@@ -1,6 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 cd "${0:A:h:h}"
+source Scripts/release-version.sh
+resolve_release_version "$@"
 
 swift build -c release --arch arm64 --cache-path .build/cache
 BIN_PATH=$(swift build -c release --arch arm64 --show-bin-path --cache-path .build/cache)
@@ -19,6 +21,8 @@ done < <(otool -l "$APP_PATH/Contents/MacOS/StretchBreak" | awk '
         rpath=0
     }')
 cp Resources/Info.plist "$APP_PATH/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $STRETCHBREAK_VERSION" "$APP_PATH/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $STRETCHBREAK_VERSION" "$APP_PATH/Contents/Info.plist"
 swift -module-cache-path .build/icon-module-cache Scripts/MakeIcon.swift "$APP_PATH/Contents/Resources"
 codesign --force --sign - "$APP_PATH"
 codesign --verify --strict "$APP_PATH"

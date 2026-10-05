@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -euo pipefail
 cd "${0:A:h:h}"
-./Scripts/build-app.sh
+./Scripts/build-app.sh "$@"
 TEST_APP="$PWD/dist/UITests/StretchBreak UI Tests.app"
 ditto "$PWD/dist/Release/StretchBreak.app" "$TEST_APP"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier local.stretchbreak.uitests' "$TEST_APP/Contents/Info.plist"
