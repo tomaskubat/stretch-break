@@ -6,9 +6,9 @@ Workflow v `.github/workflows/release.yml` vytvoří release po odeslání nové
 
 Workflow `.github/workflows/ci.yml` běží při otevření a aktualizaci pull requestu do `main`, při pushnutí do `main` a při ručním spuštění v Actions → CI. Používá stejný Apple Silicon runner a Xcode jako release workflow. Novější běh stejného PR nebo stejné větve nahradí starší nedokončený běh stejné události.
 
-CI kontroluje syntax shellových skriptů, `Resources/Info.plist` a obě workflow pomocí actionlint 1.7.12. Stažený nástroj ověřuje připnutým SHA-256 součtem. Potom spustí všechny automatické testy, vytvoří release sestavení a ověří distribuční archivy včetně ad hoc podpisů, verzí, architektury, závislostí, obsahu a kontrolních součtů. CI má pouze oprávnění `contents: read`, nepoužívá produkční podpisový klíč a nic nepublikuje.
+CI kontroluje syntaxi shellových skriptů, `Resources/Info.plist` a obě workflow pomocí actionlint 1.7.12. Stažený nástroj ověřuje připnutým SHA-256 součtem. Potom spustí všechny automatické testy, vytvoří release sestavení a ověří distribuční archivy včetně ad hoc podpisů, verzí, architektury, závislostí, obsahu a kontrolních součtů. CI má pouze oprávnění `contents: read`, nepoužívá produkční podpisový klíč a nic nepublikuje.
 
-Kontrola pro pravidla větve `main` se jmenuje `Tests and distribution`. Po zavedení workflow ji nastav jako povinnou kontrolu před sloučením PR. Samotný soubor workflow pravidla ochrany větve nenastavuje.
+V repozitáři `tomaskubat/stretch-break` je `Tests and distribution` nastavená jako povinná kontrola větve `main` a musí pocházet z GitHub Actions. Před sloučením musí být větev PR aktuální vůči `main`. Správce repozitáře může pravidlo obejít. Samotný soubor workflow pravidla ochrany větve nenastavuje; v jiné kopii repozitáře je nastav samostatně.
 
 Místní ekvivalent CI:
 

@@ -111,4 +111,6 @@ Nová kontrola publikování stáhla soubory skutečného GitHub releasu 1.1.0 a
 
 Oddělené místní scénáře se skutečně podepsaným update ZIPem ověřily platný průchod a odmítnutí poškozeného archivu, nahrazeného manifestu, neplatného podpisu, pozměněného archivu s přepočítanými kontrolními součty, jiné verze v latest feedu a neočekávaného názvu souboru v manifestu. Všech šest chybných scénářů skončilo před rozbalením archivu. Znovu prošly také čtyři stávající testy změněné verze, URL, délky a podpisu pro výchozí cestu ověřovacího skriptu.
 
-Nová workflow jsou ověřená místně a pomocí actionlint. Jejich běh na GitHubu bude možné ověřit po pushnutí změn. Pravidla ochrany větve `main` při této změně nejsou upravená.
+Commit `e4afe3e` prošel také [skutečným během CI na GitHubu](https://github.com/tomaskubat/stretch-break/actions/runs/37362259483). Runner použil Xcode 26.6 a Swift 6.3.3; prošly kontroly konfigurace, všech 34 testů ve čtyřech sadách, release sestavení a ověření distribučních archivů. Workflow se spustilo událostí `push` do `main`.
+
+Ochrana `main` vyžaduje kontrolu `Tests and distribution` od GitHub Actions a aktuální větev před sloučením. Nastavení bylo následně přečtené z GitHub API a potvrzené. Pravidlo se nevynucuje pro správce repozitáře.
