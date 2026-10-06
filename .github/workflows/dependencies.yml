@@ -1,0 +1,39 @@
+name: Sparkle dependency graph
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - Package.resolved
+      - Scripts/sparkle-dependency-snapshot.py
+      - .github/workflows/dependencies.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sparkle-dependency-graph
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Submit the pinned Sparkle dependency
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python3 Scripts/sparkle-dependency-snapshot.py "$GITHUB_SHA" "$GITHUB_RUN_ID" > "$RUNNER_TEMP/sparkle-dependencies.json"
+          gh api --method POST "repos/$GH_REPO/dependency-graph/snapshots" --input "$RUNNER_TEMP/sparkle-dependencies.json"

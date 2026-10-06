@@ -75,6 +75,8 @@ After building and packaging, `test-update-verification.py` runs locally with te
 
 Dependabot checks Sparkle for new versions every Monday at 09:00 Europe/Prague and opens at most one version-update pull request. Patch, minor, and major releases are eligible. Dependabot alerts and security updates are enabled in the repository settings; security updates run independently of the weekly schedule and version-update PR limit.
 
+The `Sparkle dependency graph` workflow submits the version from `Package.resolved` to GitHub after a lockfile change is merged into `main`. This keeps security detection current even when GitHub's static dependency graph does not discover the lockfile. If another Swift package is added, update the submission script to include the new dependencies.
+
 Review the release notes and the `Tests and distribution` CI result before merging each update manually. Sparkle stays pinned to an exact version in `Package.swift` and `Package.resolved`. Users receive the updated library with the next StretchBreak release.
 
 ## GitHub releases
