@@ -79,6 +79,8 @@ The `Sparkle dependency graph` workflow submits the version from `Package.resolv
 
 Review the release notes and the `Tests and distribution` CI result before merging each update manually. Sparkle stays pinned to an exact version in `Package.swift` and `Package.resolved`. Users receive the updated library with the next StretchBreak release.
 
+The workflow checker actionlint is pinned separately in `Scripts/check-config.sh`. Update its version and Apple Silicon archive checksum together, following [actionlint maintenance](Docs/Actionlint.md). Dependabot does not manage this shell download.
+
 ## GitHub releases
 
 Pushing a new tag, such as `v1.1.0`, runs the tests, builds the app, signs the update archive, and verifies the packages and appcast. If all steps succeed, the workflow publishes a GitHub release with the Apple Silicon app, source archive, update archive, appcast, and checksums. The app version and filenames come from the tag. [Docs/Releasing.md](Docs/Releasing.md) describes setup, publishing, and local verification.
