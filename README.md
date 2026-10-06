@@ -71,6 +71,12 @@ The build produces `dist/Release/StretchBreak.app`. The packaging script creates
 
 After building and packaging, `test-update-verification.py` runs locally with temporary copies and disposable Ed25519 keys. It does not need the production signing key or an update feed in `dist`. Both CI and release jobs run these tests. `verify-release.swift` owns the shared distribution, signed-release and published-asset checks; the existing shell commands supply the original release evidence and candidate files.
 
+## Dependency updates
+
+Dependabot checks Sparkle for new versions every Monday at 09:00 Europe/Prague and opens at most one version-update pull request. Patch, minor, and major releases are eligible. Dependabot alerts and security updates are enabled in the repository settings; security updates run independently of the weekly schedule and version-update PR limit.
+
+Review the release notes and the `Tests and distribution` CI result before merging each update manually. Sparkle stays pinned to an exact version in `Package.swift` and `Package.resolved`. Users receive the updated library with the next StretchBreak release.
+
 ## GitHub releases
 
 Pushing a new tag, such as `v1.1.0`, runs the tests, builds the app, signs the update archive, and verifies the packages and appcast. If all steps succeed, the workflow publishes a GitHub release with the Apple Silicon app, source archive, update archive, appcast, and checksums. The app version and filenames come from the tag. [Docs/Releasing.md](Docs/Releasing.md) describes setup, publishing, and local verification.
