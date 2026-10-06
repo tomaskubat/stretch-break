@@ -53,3 +53,6 @@ jobs:
           ./Scripts/build-app.sh
           ./Scripts/package-app.sh
           ./Scripts/verify-package.sh
+
+      - name: Test release verification with disposable signed fixtures
+        run: python3 Scripts/test-update-verification.py

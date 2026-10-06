@@ -17,6 +17,6 @@ else
     "$TOOLS/generate_appcast" --account local.stretchbreak.app "${APPCAST_ARGUMENTS[@]}"
 fi
 cp "$UPDATES_DIR/appcast.xml" dist/appcast.xml
-swift -module-cache-path .build/update-module-cache Scripts/verify-update.swift "$STRETCHBREAK_VERSION"
 (cd dist && shasum -a 256 "$STRETCHBREAK_APP_ARCHIVE" "$STRETCHBREAK_SOURCE_ARCHIVE" "$STRETCHBREAK_UPDATE_ARCHIVE" appcast.xml > SHA256SUMS.txt)
+swift -module-cache-path .build/update-module-cache Scripts/verify-release.swift signed "$STRETCHBREAK_VERSION" "$PWD" "$PWD/dist"
 print "Generated and verified dist/appcast.xml."

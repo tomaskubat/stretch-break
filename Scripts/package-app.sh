@@ -19,7 +19,7 @@ cp LICENSE "$STAGING_DIR/StretchBreak/LICENSE"
 awk -v version="$STRETCHBREAK_VERSION" 'NR == 1 { print "# StretchBreak " version " pro Apple Silicon"; next } { print }' Docs/Install.md > "$STAGING_DIR/StretchBreak/Install.md"
 ditto -c -k --sequesterRsrc --keepParent "$STAGING_DIR/StretchBreak" "$PWD/dist/$STRETCHBREAK_APP_ARCHIVE"
 ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$PWD/dist/$STRETCHBREAK_UPDATE_ARCHIVE"
-for ITEM in Package.swift Package.resolved README.md LICENSE .gitignore .github Sources Tests Scripts Resources Docs Previews; do
+for ITEM in Package.swift Package.resolved README.md CONTEXT.md LICENSE .gitignore .github Sources Tests Scripts Resources Docs Previews; do
     ditto --norsrc --noextattr "$PWD/$ITEM" "$STAGING_DIR/StretchBreak-source/$ITEM"
 done
 ditto -c -k --norsrc --noextattr --keepParent "$STAGING_DIR/StretchBreak-source" "$PWD/dist/$STRETCHBREAK_SOURCE_ARCHIVE"

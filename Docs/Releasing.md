@@ -8,6 +8,8 @@ Workflow `.github/workflows/ci.yml` běží při otevření a aktualizaci pull r
 
 CI kontroluje syntaxi shellových skriptů, `Resources/Info.plist` a obě workflow pomocí actionlint 1.7.12. Stažený nástroj ověřuje připnutým SHA-256 součtem. Potom spustí všechny automatické testy, vytvoří release sestavení a ověří distribuční archivy včetně ad hoc podpisů, verzí, architektury, závislostí, obsahu a kontrolních součtů. CI má pouze oprávnění `contents: read`, nepoužívá produkční podpisový klíč a nic nepublikuje.
 
+Po balení CI spustí také `Scripts/test-update-verification.py`. Testy používají dočasné kopie aplikace a zdrojů, vlastní jednorázový Ed25519 klíč a skutečné nástroje macOS. Nepracují s Klíčenkou, nemění soubory v `dist` a nevyžadují produkční podpisový klíč ani přístup na GitHub. Ověřují přijetí platných archivů, čtyři změny feedu, šest chyb publikovaných assetů a kontroly obsahu, podpisu aplikace, architektury a shody zdrojů po autentizaci.
+
 V repozitáři `tomaskubat/stretch-break` je `Tests and distribution` nastavená jako povinná kontrola větve `main` a musí pocházet z GitHub Actions. Před sloučením musí být větev PR aktuální vůči `main`. Správce repozitáře může pravidlo obejít. Samotný soubor workflow pravidla ochrany větve nenastavuje; v jiné kopii repozitáře je nastav samostatně.
 
 Místní ekvivalent CI:
@@ -18,6 +20,7 @@ swift test --cache-path .build/cache
 ./Scripts/build-app.sh
 ./Scripts/package-app.sh
 ./Scripts/verify-package.sh
+python3 Scripts/test-update-verification.py
 ```
 
 Skutečné ovládání aplikace a instalaci aktualizace mezi dvěma verzemi ověř před vydáním podle `Docs/UITests.md`. Tyto scénáře nejsou součástí automatického CI.
@@ -60,7 +63,7 @@ Verze aplikace a názvy archivů se odvozují z tagu. `Resources/Info.plist` pos
 
 Workflow na Apple Silicon runneru `macos-26` s Xcode 26.6 ověří tag, spustí testy, sestaví aplikaci se Sparkle a podepíše aplikaci i pomocné procesy ad hoc. Potom zabalí archivy, vytvoří feed a ověří verzi, architekturu, podpisy, odkazy, kontrolní součty a shodu zdrojů. Ed25519 podpis updateru ověřuje vůči veřejnému klíči skutečně zabalené aplikace. Chybějící secret nebo neodpovídající klíč zastaví workflow před publikováním.
 
-Release workflow také spouští kontroly konfigurace a testy odmítnutí změněné verze, odkazu, délky archivu a podpisu v appcastu. Po publikování stáhne všechny tři ZIPy a kontrolní součty z konkrétního tagu, feed stáhne ze stejné adresy `latest/download/appcast.xml`, kterou používá updater. Porovná stažené součty s místními součty ověřených release assetů, ověří stažené soubory, metadata feedu, Ed25519 podpis update ZIPu a podpis i metadata rozbalené aplikace. Pokud tato kontrola selže, workflow skončí chybou; již publikovaný release zůstane dostupný a vyžaduje kontrolu.
+Release workflow také spouští kontroly konfigurace a stejné izolované testy ověřování jako CI. Po publikování stáhne všechny tři ZIPy a kontrolní součty z konkrétního tagu, feed stáhne ze stejné adresy `latest/download/appcast.xml`, kterou používá updater. Společný modul porovná stažený manifest s původním manifestem, ověří kontrolní součty všech assetů a Ed25519 podpis update ZIPu před rozbalením. Potom provede stejné kontroly aplikace a zdrojů jako u místních balíčků. Pokud tato kontrola selže, workflow skončí chybou; již publikovaný release zůstane dostupný a vyžaduje kontrolu.
 
 Release běhy se při novém pushi neruší. Kontrola publikovaných souborů je posledním krokem stejného workflow. Vydání vytvořené přes `GITHUB_TOKEN` nespouští navazující workflow na událost `release.published`. Novou verzi vydávej až po dokončení předchozího běhu, aby její publikování nezměnilo `latest` během ověřování.
 
@@ -83,7 +86,9 @@ python3 Scripts/test-update-verification.py v1.1.0
 
 `generate-appcast.sh` používá klíč v Klíčence pod účtem `local.stretchbreak.app`; macOS může požádat o povolení přístupu. V CI čte `SPARKLE_PRIVATE_KEY` ze standardního vstupu podpisového nástroje. Soukromý klíč se nepředává jako argument procesu ani se nezapisuje do distribuovaných souborů.
 
-`verify-published-release.sh` vyžaduje původní sestavení a `dist/SHA256SUMS.txt` z publikování. Nové sestavení stejné verze může mít jiné součty, proto jím nenahrazuj očekávané release assety před touto kontrolou.
+`verify-published-release.sh` vyžaduje původní sestavení, odpovídající zdrojový projekt a `dist/SHA256SUMS.txt` z publikování. Nové sestavení stejné verze může mít jiné součty, proto jím nenahrazuj očekávané release assety před touto kontrolou.
+
+`Scripts/verify-release.swift` obsahuje celou ověřovací implementaci. Režim `distribution` dovoluje archivy bez appcastu pro běžné CI, `signed` appcast vyžaduje a `published` navíc vyžaduje shodu s původním manifestem. Modul přijímá verzi, kořen původního releasu a adresář kandidátních assetů výslovně. Existující příkazy a jejich argumenty zůstávají stejné; stahování a publikování jsou mimo tento modul. Dočasné rozbalené soubory po ověření odstraní.
 
 Při balení jiné verze než má sestavená aplikace skript skončí chybou. Místní skripty přijímají také verzi bez `v`. Hotové soubory vznikají v `dist/`, které se do Gitu neukládá. Při opakovaném balení více verzí platí `SHA256SUMS.txt` a `appcast.xml` pro poslední zabalenou verzi.
 

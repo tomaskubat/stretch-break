@@ -63,11 +63,13 @@ swift test --cache-path .build/cache
 ./Scripts/build-app.sh
 ./Scripts/package-app.sh
 ./Scripts/generate-appcast.sh
-python3 Scripts/test-update-verification.py 1.1.0
+python3 Scripts/test-update-verification.py
 ./Scripts/verify-package.sh
 ```
 
 The build produces `dist/Release/StretchBreak.app`. The packaging script creates a portable application ZIP, a source ZIP, an update ZIP containing only the app, and SHA-256 checksums. `generate-appcast.sh` needs the matching signing key in the Keychain or `SPARKLE_PRIVATE_KEY` environment variable. Only `arm64` is built.
+
+After building and packaging, `test-update-verification.py` runs locally with temporary copies and disposable Ed25519 keys. It does not need the production signing key or an update feed in `dist`. Both CI and release jobs run these tests. `verify-release.swift` owns the shared distribution, signed-release and published-asset checks; the existing shell commands supply the original release evidence and candidate files.
 
 ## GitHub releases
 
@@ -79,7 +81,7 @@ Pushing a new tag, such as `v1.1.0`, runs the tests, builds the app, signs the u
 
 ## Verification
 
-All 37 automated tests passed. They cover controlled time, real SQLite transactions and write failures, restoration after restart, notification integration with a replaceable system client, rendered menu bar colors and shapes in both appearances, and the status item's appearance observer in the actual app runtime. The main flows were verified in the running app, including the actual anchored panel and restoration after terminating the process.
+All 37 Swift tests and 18 release-verification tests passed. They cover controlled time, real SQLite transactions and write failures, restoration after restart, notification integration with a replaceable system client, rendered menu bar colors and shapes in both appearances, and the status item's appearance observer in the actual app runtime. Release tests cover signed and published assets, tampering rejection, real appcast generation and preservation of the original release files. The main flows were verified in the running app, including the actual anchored panel and restoration after terminating the process.
 
 See [Docs/Verification.md](Docs/Verification.md) for details and limitations. Verified on Apple Silicon with macOS 27.0.1, Xcode 27.0, and Swift 6.4. Another physical Mac and older supported macOS versions were not available. System notifications are denied on this Mac, so delivery of an actual banner and clicking it have not been verified.
 

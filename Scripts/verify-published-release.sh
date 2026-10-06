@@ -19,17 +19,5 @@ curl --fail --silent --show-error --location --retry 3 --retry-all-errors \
     --output "$PUBLISHED_DIR/appcast.xml" \
     https://github.com/tomaskubat/stretch-break/releases/latest/download/appcast.xml
 
-EXPECTED_ASSETS="$STRETCHBREAK_APP_ARCHIVE"$'\n'"$STRETCHBREAK_SOURCE_ARCHIVE"$'\n'"$STRETCHBREAK_UPDATE_ARCHIVE"$'\n'appcast.xml
-[[ $(awk '{ print $2 }' "$PUBLISHED_DIR/SHA256SUMS.txt") == "$EXPECTED_ASSETS" ]]
-cmp dist/SHA256SUMS.txt "$PUBLISHED_DIR/SHA256SUMS.txt"
-(cd "$PUBLISHED_DIR" && shasum -a 256 -c SHA256SUMS.txt)
-swift -module-cache-path .build/update-module-cache Scripts/verify-update.swift "$STRETCHBREAK_VERSION" "$PUBLISHED_DIR"
-
-# The downloaded archive is authenticated before it is extracted.
-ditto -x -k "$PUBLISHED_DIR/$STRETCHBREAK_UPDATE_ARCHIVE" "$PUBLISHED_DIR/update"
-[[ $(ls -A "$PUBLISHED_DIR/update") == StretchBreak.app ]]
-APP_PATH="$PUBLISHED_DIR/update/StretchBreak.app"
-codesign --verify --deep --strict "$APP_PATH"
-[[ $(lipo -archs "$APP_PATH/Contents/MacOS/StretchBreak") == arm64 ]]
-cmp dist/Release/StretchBreak.app/Contents/Info.plist "$APP_PATH/Contents/Info.plist"
+swift -module-cache-path .build/update-module-cache Scripts/verify-release.swift published "$STRETCHBREAK_VERSION" "$PWD" "$PUBLISHED_DIR"
 print "Verified published archives, the latest feed, and the signed update for $STRETCHBREAK_VERSION."

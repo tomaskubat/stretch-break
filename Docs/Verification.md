@@ -133,3 +133,13 @@ Samostatná kopie opravené Release aplikace s vlastním bundle ID a databází 
 Měření používá pět sekundových vzorků `ps`; první dva zahazuje. Původní běžící aplikace během tohoto ověření také vykazovala nízké CPU. Tato čísla tedy nejsou přímým měřením poklesu oproti dříve reportovaným 98,2 %. Regresní test nezávisí na tom, zda AppKit na daném Macu sám opakovaná oznámení vyvolá, protože je cíleně přehrává přes skutečný observer a frontu hlavního aktoru.
 
 Vzhled systémového menu baru nebyl globálně přepínán. Změnu barev ikony při změně vzhledu jejího skutečného tlačítka ověřuje integrační test. Opravené lokální sestavení je v `dist/CPUFix/StretchBreak.app`; testovací kopie byla po měření ukončena. Publikování nového releasu a instalace opravy do původní běžící aplikace nejsou součástí tohoto ověření.
+
+## Shared release verification, 2026-10-05
+
+`Scripts/verify-release.swift` now owns distribution, signed-release and published-asset verification. Original build evidence and candidate files are explicit inputs. Downloading and publishing remain in the existing commands, which keep their arguments. Published verification checks the original manifest, all checksums and the update signature before extracting any archive, then applies the full application and source checks.
+
+Local verification used Apple Silicon, macOS 27.0.1 and Xcode 27.0. The release build and packaging for 1.2.0 passed, along with all 37 existing Swift tests, all 18 release-verification tests, workflow validation with the pinned actionlint 1.7.12, shell syntax and the real distribution check.
+
+`Scripts/test-update-verification.py` covers valid signed and published assets, the no-feed CI case, four altered feed fields, six published-asset failures, authenticated malformed archive contents, invalid app codesign, incorrect architecture and changed source contents. It also runs the real Sparkle appcast generator and existing package command with a disposable key, and checks source snapshots that predate the glossary. The suite checks afterward that the original archives, feed, manifest and public-key property lists are unchanged.
+
+Fixtures use temporary copies of the real packaged app and source, real Ed25519 signatures, real ad hoc codesign and macOS tools. No production private key, Keychain operation or GitHub access is needed. Ordinary CI now runs the same suite as the release workflow. GitHub Actions execution and downloading a newly published release were not exercised for this change.
